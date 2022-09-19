@@ -1,0 +1,25 @@
+object dmPrincipal: TdmPrincipal
+  OldCreateOrder = False
+  Height = 608
+  Width = 264
+  object cnnConexao: TFDConnection
+    Params.Strings = (
+      'DriverID=PG')
+    LoginPrompt = False
+    Left = 48
+    Top = 16
+  end
+  object FDPhysPgDriverLink: TFDPhysPgDriverLink
+    Left = 184
+    Top = 272
+  end
+  object FDGUIxWaitCursor: TFDGUIxWaitCursor
+    Provider = 'Forms'
+    Left = 184
+    Top = 208
+  end
+  object FDPhysSQLiteDriverLink1: TFDPhysSQLiteDriverLink
+    Left = 40
+    Top = 192
+  end
+end

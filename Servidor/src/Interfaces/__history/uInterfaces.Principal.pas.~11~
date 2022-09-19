@@ -1,0 +1,33 @@
+unit uInterfaces.Principal;
+
+interface
+
+uses
+  System.JSON, data.db;
+
+Type
+
+  iConexao = interface
+    ['{D8C17A2D-7C89-4AEF-B022-4C69CA61F5FD}']
+
+    function Conexao : TCustomConnection;
+
+  end;
+
+  iQuery = interface
+    ['{8A85268C-475D-42BA-B7B5-F20BED722DB8}']
+
+    function QryPost(json : TJSONObject) : iQuery;
+    function QryGetAll(json : TJSONObject) : iQuery;
+    function QryGetCEP(sCEP: string; out sRecord: integer) : iQuery;
+
+  end;
+
+  iGets = interface
+
+
+  end;
+
+implementation
+
+end.

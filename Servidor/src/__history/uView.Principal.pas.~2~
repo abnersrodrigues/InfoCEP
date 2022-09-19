@@ -1,0 +1,49 @@
+unit uView.Principal;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uController.Provider, Data.DB, Vcl.Grids,
+  Vcl.DBGrids, uModel.Principal, Vcl.StdCtrls, Vcl.Buttons, uController.Compare;
+
+type
+  TfrmPrincipal = class(TForm)
+    btn_comparar: TSpeedButton;
+    procedure FormDestroy(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure btn_compararClick(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+
+    Provider : TControllerProvider;
+
+  end;
+
+var
+  frmPrincipal: TfrmPrincipal;
+
+implementation
+
+{$R *.dfm}
+
+procedure TfrmPrincipal.FormDestroy(Sender: TObject);
+begin
+  dmPrincipal.Free;
+  Provider.free;
+end;
+
+procedure TfrmPrincipal.btn_compararClick(Sender: TObject);
+begin
+  TControllerCompare.GetAll;
+end;
+
+procedure TfrmPrincipal.FormCreate(Sender: TObject);
+begin
+  Provider := TControllerProvider.Create;
+  Provider.Inicializar;
+end;
+
+end.

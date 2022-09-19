@@ -1,0 +1,26 @@
+unit uController.APIWhatsApp;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections,
+  uModel.Principal, DataSet.Serialize;
+
+type
+  TControllerAPIWhatsApp = class
+  private
+
+  public
+    class function JsonWhatsApp(origem: string): TJSONObject; static;
+
+  end;
+
+implementation
+
+class function TControllerAPIWhatsApp.JsonWhatsApp(origem: string): TJSONObject;
+Begin
+
+End;
+
+
+end.

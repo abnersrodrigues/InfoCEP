@@ -1,0 +1,16 @@
+unit uControllerConst;
+
+interface
+
+const
+  APIBASE     = '';
+  APILOGIN    = 'grv';
+  APIPASSWORD = 'grv';
+
+
+implementation
+
+end.
+
+
+

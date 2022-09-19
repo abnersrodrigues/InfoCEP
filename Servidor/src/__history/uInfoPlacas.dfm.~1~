@@ -1,0 +1,6 @@
+object InfoPlacas: TInfoPlacas
+  OldCreateOrder = False
+  DisplayName = 'InfoPlacas'
+  Height = 195
+  Width = 227
+end

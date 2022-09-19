@@ -1,0 +1,75 @@
+unit uModel.Principal;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, FireDAC.Stan.Intf, FireDAC.Stan.Option,
+  FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool,
+  FireDAC.Stan.Async, FireDAC.Phys, FireDAC.VCLUI.Wait, Data.DB,
+  FireDAC.Comp.Client, FireDAC.Phys.PGDef, FireDAC.Phys.PG, FireDAC.Phys.SQLite,
+  FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs, FireDAC.Comp.UI,
+  FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.Comp.DataSet,
+  FireDAC.Stan.StorageBin, System.IniFiles, Vcl.Forms;
+
+type
+  TdmPrincipal = class(TDataModule)
+    cnnConexao: TFDConnection;
+    FDPhysPgDriverLink: TFDPhysPgDriverLink;
+    FDGUIxWaitCursor: TFDGUIxWaitCursor;
+    FDPhysSQLiteDriverLink1: TFDPhysSQLiteDriverLink;
+  private
+
+    { Private declarations }
+  public
+    { Public declarations }
+
+    class function Log(txt: String): Boolean; static;
+    class function LogPlacas(txt: String): Boolean; static;
+
+  end;
+
+
+Var
+  dmPrincipal   : TdmPrincipal;
+  fbase         : string;
+
+implementation
+
+
+{$R *.dfm}
+
+//Lanca Log em txt lancamentos das Placas
+{$region 'Arquivo de Log em txt'}
+class function TdmPrincipal.Log(txt:String):Boolean;
+var
+  f   : TextFile;
+  Arq : string;
+begin
+  Arq := ExtractFilePath(ParamStr(0)) + 'log.txt'; //txt na raiz do .exe
+
+  AssignFile(f, Arq);
+  Append(f);
+  Writeln(f, txt);
+  Flush(f);
+  CloseFile(f);
+end;
+{$endregion}
+
+//Lanca Log em txt Confronto em tabelas Veiculos (api antiga) vs Placas (api atual)
+{$region 'Arquivo de Log em txt'}
+class function TdmPrincipal.LogPlacas(txt:String):Boolean;
+var
+  f   : TextFile;
+  Arq : string;
+begin
+  Arq := ExtractFilePath(ParamStr(0)) + 'logplacas.txt';  //txt na raiz do .exe
+
+  AssignFile(f, Arq);
+  Append(f);
+  Writeln(f, txt);
+  Flush(f);
+  CloseFile(f);
+end;
+{$endregion}
+
+end.

@@ -1,0 +1,496 @@
+unit uDataModule;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, FireDAC.Stan.Intf, FireDAC.Stan.Option,
+  FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool,
+  FireDAC.Stan.Async, FireDAC.Phys, FireDAC.VCLUI.Wait, Data.DB,
+  FireDAC.Comp.Client, FireDAC.Phys.PGDef, FireDAC.Phys.PG, FireDAC.Phys.SQLite,
+  FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs, FireDAC.Comp.UI,
+  FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.Comp.DataSet,
+  FireDAC.Stan.StorageBin;
+
+type
+  TdmPrincipal = class(TDataModule)
+    cnnConexao: TFDConnection;
+    FDPhysPgDriverLink: TFDPhysPgDriverLink;
+    FDGUIxWaitCursor: TFDGUIxWaitCursor;
+    temp_extra: TFDMemTable;
+    temp_dados: TFDMemTable;
+    temp_dadoscodigo_marca: TStringField;
+    temp_dadoscodigo_modelo: TStringField;
+    temp_dadosscore: TStringField;
+    temp_dadostexto_modelo: TStringField;
+    temp_dadoscodigo_fipe: TStringField;
+    temp_extraano_fabricacao: TStringField;
+    temp_extraano_modelo: TStringField;
+    temp_extracap_maxima_tracao: TStringField;
+    temp_extracarroceria: TStringField;
+    temp_extrachassis: TStringField;
+    temp_extracilindradas: TStringField;
+    temp_extracombustivel: TStringField;
+    temp_extradi: TStringField;
+    temp_extraeixo_traseiro_dif: TStringField;
+    temp_extraeixos: TStringField;
+    temp_extraespecie: TStringField;
+    temp_extrafaturado: TStringField;
+    temp_extragrupo: TStringField;
+    temp_extralimite_restricao_trib: TStringField;
+    temp_extralinha: TStringField;
+    temp_extramedia_preco: TStringField;
+    temp_extramodelo: TStringField;
+    temp_extramotor: TStringField;
+    temp_extramunicipio: TStringField;
+    temp_extranacionalidade: TStringField;
+    temp_extrapeso_bruto_total: TStringField;
+    temp_extraplaca: TStringField;
+    temp_extraplaca_modelo_antigo: TStringField;
+    temp_extraplaca_modelo_novo: TStringField;
+    temp_extraquantidade_passageiro: TStringField;
+    temp_extraregistro_di: TStringField;
+    temp_extrarenavam: TStringField;
+    temp_extrarestricao_1: TStringField;
+    temp_extrarestricao_2: TStringField;
+    temp_extrarestricao_3: TStringField;
+    temp_extrarestricao_4: TStringField;
+    temp_extras_especie: TStringField;
+    temp_extrasegmento: TStringField;
+    temp_extrasituacao_chassi: TStringField;
+    temp_extrasituacao_veiculo: TStringField;
+    temp_extrasub_segmento: TStringField;
+    temp_extraterceiro_eixo: TStringField;
+    temp_extratipo_carroceria: TStringField;
+    temp_extratipo_doc_faturado: TStringField;
+    temp_extratipo_doc_importadora: TStringField;
+    temp_extratipo_doc_prop: TStringField;
+    temp_extratipo_montagem: TStringField;
+    temp_extratipo_veiculo: TStringField;
+    temp_extrauf: TStringField;
+    temp_extrauf_faturado: TStringField;
+    temp_extrauf_placa: TStringField;
+    temp_extraunidade_local_srf: TStringField;
+    temp_principal: TFDMemTable;
+    temp_principalcor: TStringField;
+    temp_principaldata: TStringField;
+    temp_principallogo: TStringField;
+    temp_principalplaca: TStringField;
+    temp_principalplaca_alternativa: TStringField;
+    temp_principaltoken: TStringField;
+    temp_principaluf: TStringField;
+    temp_principalMODELO: TStringField;
+    temp_extracaixa_cambio: TStringField;
+    temp_principalSUBMODELO: TStringField;
+    temp_principalMARCA: TStringField;
+  private
+    function AtualizaContador: Boolean;
+
+    { Private declarations }
+  public
+    { Public declarations }
+
+    function Add(AnoFabricacao, CaixaCambio, CapacidadeCarga, Carroceria,
+      CilindradasCm3, Cmt, Combustivel, Cor, EixoTraseiroDiferencial,
+      MarcaModelo, Municipio, NumeroChassi, NumeroMotor, Pbt, Placa,
+      PotenciaCavalos, Procedencia, QuantidadeEixos, QuantidadePassageiros,
+      SituacaoChassi, TipoCarroceria, TipoMontagem, TipoVeiculo,
+      Uf: String): boolean;
+    function AddPlaca: boolean;
+    class function Log(txt: String): Boolean; static;
+    class function LogPlacas(txt: String): Boolean; static;
+
+    //Gravando Comparação
+    function AddLogPlacas(AnoFabricacao, CaixaCambio, CapacidadeCarga,
+      Carroceria, CilindradasCm3, Cmt, Combustivel, Cor,
+      EixoTraseiroDiferencial, MarcaModelo, Municipio, NumeroChassi,
+      NumeroMotor, Pbt, Placa, PotenciaCavalos, Procedencia, QuantidadeEixos,
+      QuantidadePassageiros, SituacaoChassi, TipoCarroceria, TipoMontagem,
+      TipoVeiculo, Uf: String): boolean;
+  end;
+
+
+implementation
+
+{$R *.dfm}
+
+{$region 'Função Add Veiculos'}
+function TdmPrincipal.Add(AnoFabricacao, CaixaCambio, CapacidadeCarga, Carroceria,
+  CilindradasCm3, Cmt, Combustivel, Cor, EixoTraseiroDiferencial,
+  MarcaModelo, Municipio, NumeroChassi, NumeroMotor, Pbt, Placa,
+  PotenciaCavalos, Procedencia, QuantidadeEixos, QuantidadePassageiros,
+  SituacaoChassi, TipoCarroceria, TipoMontagem, TipoVeiculo,
+  Uf: String): boolean;
+Var
+  post : TFDQuery;
+Begin
+  try
+    post := TFDQuery.Create(nil);
+    post.Connection := cnnConexao;
+
+    with post do
+      Begin
+        Close;
+        SQL.Clear;
+        SQL.Add('insert into tab_veiculos');
+        SQL.Add('(AnoFabricacao, CaixaCambio, CapacidadeCarga, Carroceria, CilindradasCm3,');
+        SQL.Add('Cmt, Combustivel, Cor, eixotraseirodiferencial, MarcaModelo, Municipio,');
+        SQL.Add('NumeroChassi, NumeroMotor, Pbt, Placa, PotenciaCavalos, Procedencia, QuantidadeEixos,');
+        SQL.Add('QuantidadePassageiros, SituacaoChassi, TipoCarroceria, TipoMontagem, TipoVeiculo, Uf)');
+        SQL.Add('values');
+        SQL.Add('(:AnoFabricacao, :CaixaCambio, :CapacidadeCarga, :Carroceria, :CilindradasCm3,');
+        SQL.Add(':Cmt, :Combustivel, :Cor, :eixotraseirodiferencial, :MarcaModelo, :Municipio,');
+        SQL.Add(':NumeroChassi, :NumeroMotor, :Pbt, :Placa, :PotenciaCavalos, :Procedencia, :QuantidadeEixos,');
+        SQL.Add(':QuantidadePassageiros, :SituacaoChassi, :TipoCarroceria, :TipoMontagem, :TipoVeiculo, :Uf)');
+
+        Params.ParamByName('AnoFabricacao').value := AnoFabricacao;
+        Params.ParamByName('CaixaCambio').value := CaixaCambio;
+        Params.ParamByName('CapacidadeCarga').value := CapacidadeCarga;
+        Params.ParamByName('Carroceria').value := Carroceria;
+        Params.ParamByName('CilindradasCm3').value := CilindradasCm3;
+        Params.ParamByName('Cmt').value := Cmt;
+        Params.ParamByName('Combustivel').value := Combustivel;
+        Params.ParamByName('Cor').value := Cor;
+        Params.ParamByName('eixotraseirodiferencial').value := EixoTraseiroDiferencial;
+        Params.ParamByName('MarcaModelo').value := MarcaModelo;
+        Params.ParamByName('Municipio').value := Municipio;
+        Params.ParamByName('NumeroChassi').value := NumeroChassi;
+        Params.ParamByName('NumeroMotor').value := NumeroMotor;
+        Params.ParamByName('Pbt').value := Pbt;
+        Params.ParamByName('Placa').value := Placa;
+        Params.ParamByName('PotenciaCavalos').value := PotenciaCavalos;
+        Params.ParamByName('Procedencia').value := Procedencia;
+        Params.ParamByName('QuantidadeEixos').value := QuantidadeEixos;
+        Params.ParamByName('QuantidadePassageiros').value := QuantidadePassageiros;
+        Params.ParamByName('SituacaoChassi').value := SituacaoChassi;
+        Params.ParamByName('TipoCarroceria').value := TipoCarroceria;
+        Params.ParamByName('TipoMontagem').value := TipoMontagem;
+        Params.ParamByName('TipoVeiculo').value := TipoVeiculo;
+        Params.ParamByName('Uf').value := Uf;
+
+        ExecSQL;
+
+        Result := true;
+
+      End;
+    post.Free;
+  Except
+    Result := false;
+    post.Free;
+  end;
+End;
+{$endregion}
+
+//nova api -- Api Externa divide Json em 3 partes: 1-Principal, 2-Extra, 3-Dados Fipe
+{$region 'Função Add Placas'}
+function TdmPrincipal.AddPlaca: boolean;
+Var
+  post  : TFDQuery;
+  id    : string;
+Begin
+  try
+    post := TFDQuery.Create(nil);
+    post.Connection := cnnConexao;
+
+    try
+      //tabela principal
+      with post do
+        Begin
+          Close;
+          SQL.Clear;
+          SQL.Add('insert into tab_placas ');
+          SQL.Add('(marca, modelo, submodelo, cor, data, logo, placa, placa_alternativa, token, uf)');
+          SQL.Add('values');
+          SQL.Add('(:marca, :modelo, :submodelo, :cor, :data, :logo, :placa, :placa_alternativa, :token, :uf) RETURNING id');
+
+            Params.ParamByName('marca').value               := temp_principalMARCA.Value;
+            Params.ParamByName('modelo').value              := temp_principalMODELO.Value;
+            Params.ParamByName('submodelo').value           := temp_principalSUBMODELO.Value;
+            Params.ParamByName('cor').value                 := temp_principalcor.Value;
+            Params.ParamByName('data').value                := temp_principaldata.Value;
+            Params.ParamByName('logo').value                := temp_principallogo.Value;
+            Params.ParamByName('placa').value               := temp_principalplaca.Value;
+            Params.ParamByName('placa_alternativa').value   := temp_principalplaca_alternativa.Value;
+            Params.ParamByName('token').value               := temp_principaltoken.Value;
+            Params.ParamByName('uf').value                  := temp_principaluf.Value;
+
+          Open;
+
+          id := FieldByName('id').AsString;
+
+          Result := true;
+        End;
+    Except
+      Log('Erro: '+ temp_principalplaca.Value +' falha ao dar post no datamodule | principal');
+      Result := false;
+    end;
+
+    try
+      //Tabela Extra
+      with post do
+        Begin
+          Close;
+          SQL.Clear;
+          SQL.Add('insert into tab_placas_extra ');
+          SQL.Add('(id_placa, ano_fabricacao, ano_modelo, caixa_cambio, cap_maxima_tracao, carroceria, chassis,');
+          SQL.Add('cilindradas, combustivel, di, eixo_traseiro_dif, eixos, especie, faturado, grupo, limite_restricao_trib,');
+          SQL.Add('linha, media_preco, modelo, motor, municipio, nacionalidade, peso_bruto_total, placa, placa_modelo_antigo,');
+          SQL.Add('placa_modelo_novo, registro_di, renavam, restricao_1, restricao_2, restricao_3, restricao_4,');
+          SQL.Add('s_especie, segmento, situacao_chassi, situacao_veiculo, sub_segmento, terceiro_eixo, tipo_carroceria,');
+          SQL.Add('tipo_doc_faturado, tipo_doc_importadora, tipo_doc_prop, tipo_veiculo, uf, uf_faturado, uf_placa, unidade_local_srf)');
+          SQL.Add('values');
+          SQL.Add('(:id_placa, :ano_fabricacao, :ano_modelo, :caixa_cambio, :cap_maxima_tracao, :carroceria, :chassis,');
+          SQL.Add(':cilindradas, :combustivel, :di, :eixo_traseiro_dif, :eixos, :especie, :faturado, :grupo, :limite_restricao_trib,');
+          SQL.Add(':linha, :media_preco, :modelo, :motor, :municipio, :nacionalidade, :peso_bruto_total, :placa, :placa_modelo_antigo,');
+          SQL.Add(':placa_modelo_novo, :registro_di, :renavam, :restricao_1, :restricao_2, :restricao_3, :restricao_4,');
+          SQL.Add(':s_especie, :segmento, :situacao_chassi, :situacao_veiculo, :sub_segmento, :terceiro_eixo, :tipo_carroceria,');
+          SQL.Add(':tipo_doc_faturado, :tipo_doc_importadora, :tipo_doc_prop, :tipo_veiculo, :uf, :uf_faturado, :uf_placa, :unidade_local_srf)');
+            Params.ParamByName('id_placa').AsInteger            := id.ToInteger;
+            Params.ParamByName('ano_fabricacao').value          := temp_extraano_fabricacao.Value;
+            Params.ParamByName('ano_modelo').value              := temp_extraano_modelo.Value;
+            Params.ParamByName('caixa_cambio').value            := temp_extracaixa_cambio.Value;
+            Params.ParamByName('cap_maxima_tracao').value       := temp_extracap_maxima_tracao.Value;
+            Params.ParamByName('carroceria').value              := temp_extracarroceria.Value;
+            Params.ParamByName('chassis').value                 := temp_extrachassis.Value;
+            Params.ParamByName('cilindradas').value             := temp_extracilindradas.Value;
+            Params.ParamByName('combustivel').value             := temp_extracombustivel.Value;
+            Params.ParamByName('di').value                      := temp_extradi.Value;
+            Params.ParamByName('eixo_traseiro_dif').value       := temp_extraeixo_traseiro_dif.Value;
+            Params.ParamByName('eixos').value                   := temp_extraeixos.Value;
+            Params.ParamByName('especie').value                 := temp_extraespecie.Value;
+            Params.ParamByName('faturado').value                := temp_extrafaturado.Value;
+            Params.ParamByName('grupo').value                   := temp_extragrupo.Value;
+            Params.ParamByName('limite_restricao_trib').value   := temp_extralimite_restricao_trib.Value;
+            Params.ParamByName('linha').value                   := temp_extralinha.Value;
+            Params.ParamByName('media_preco').value             := temp_extramedia_preco.Value;
+            Params.ParamByName('modelo').value                  := temp_extramodelo.Value;
+            Params.ParamByName('motor').value                   := temp_extramotor.Value;
+            Params.ParamByName('municipio').value               := temp_extramunicipio.Value;
+            Params.ParamByName('nacionalidade').value           := temp_extranacionalidade.Value;
+            Params.ParamByName('peso_bruto_total').value        := temp_extrapeso_bruto_total.Value;
+            Params.ParamByName('placa').value                   := temp_extraplaca.Value;
+            Params.ParamByName('placa_modelo_antigo').value     := temp_extraplaca_modelo_antigo.Value;
+            Params.ParamByName('placa_modelo_novo').value       := temp_extraplaca_modelo_novo.Value;
+            Params.ParamByName('registro_di').value             := temp_extraregistro_di.Value;
+            Params.ParamByName('renavam').value                 := temp_extrarenavam.Value;
+            Params.ParamByName('restricao_1').value             := temp_extrarestricao_1.Value;
+            Params.ParamByName('restricao_2').value             := temp_extrarestricao_2.Value;
+            Params.ParamByName('restricao_3').value             := temp_extrarestricao_3.Value;
+            Params.ParamByName('restricao_4').value             := temp_extrarestricao_4.Value;
+            Params.ParamByName('s_especie').value               := temp_extras_especie.Value;
+            Params.ParamByName('segmento').value                := temp_extrasegmento.Value;
+            Params.ParamByName('situacao_chassi').value         := temp_extrasegmento.Value;
+            Params.ParamByName('situacao_veiculo').value        := temp_extrasituacao_veiculo.Value;
+            Params.ParamByName('sub_segmento').value            := temp_extrasub_segmento.Value;
+            Params.ParamByName('terceiro_eixo').value           := temp_extraterceiro_eixo.Value;
+            Params.ParamByName('tipo_carroceria').value         := temp_extratipo_carroceria.Value;
+            Params.ParamByName('tipo_doc_faturado').value       := temp_extratipo_doc_faturado.Value;
+            Params.ParamByName('tipo_doc_importadora').value    := temp_extratipo_doc_importadora.Value;
+            Params.ParamByName('tipo_doc_prop').value           := temp_extratipo_doc_prop.Value;
+            Params.ParamByName('tipo_veiculo').value            := temp_extratipo_veiculo.Value;
+            Params.ParamByName('uf').value                      := temp_extrauf.Value;
+            Params.ParamByName('uf_faturado').value             := temp_extrauf_faturado.Value;
+            Params.ParamByName('uf_placa').value                := temp_extrauf_placa.Value;
+            Params.ParamByName('unidade_local_srf').value       := temp_extraunidade_local_srf.Value;
+
+          ExecSQL;
+          Result := true;
+        End;
+    Except
+      Log('Erro: '+ temp_extraplaca.Value +' falha ao dar post no datamodule | extra');
+      Result := false;
+    end;
+
+    try
+      //Tabela Fipe Dados
+      while not temp_dados.Eof do
+        Begin
+          with post do
+            Begin
+              Close;
+              SQL.Clear;
+              SQL.Add('insert into tab_placas_fipe_dados ');
+              SQL.Add('(id_placa, codigo_fipe, codigo_marca, codigo_modelo, score, texto_modelo)');
+              SQL.Add('values');
+              SQL.Add('(:id_placa, :codigo_fipe, :codigo_marca, :codigo_modelo, :score, :texto_modelo)');
+                Params.ParamByName('id_placa').AsInteger           := id.ToInteger;
+                Params.ParamByName('codigo_fipe').value            := temp_dadoscodigo_fipe.Value;
+                Params.ParamByName('codigo_marca').value           := temp_dadoscodigo_marca.Value;
+                Params.ParamByName('codigo_modelo').value          := temp_dadoscodigo_modelo.Value;
+                Params.ParamByName('score').value                  := temp_dadosscore.Value;
+                Params.ParamByName('texto_modelo').value           := temp_dadostexto_modelo.Value;
+
+              if temp_dadoscodigo_fipe.Value <> '' then
+                ExecSQL;
+            End;
+          temp_dados.Next;
+        End;
+      Result := true;
+    Except
+      Log('Erro: '+ temp_extraplaca.Value +' falha ao dar post no datamodule | dados : temp_dadoscodigo_fipe.Value');
+      Result := false;
+    end;
+
+    try
+      AtualizaContador;
+    Except
+      //
+    end;
+
+
+    Result := true;
+    post.Free;
+  Except
+    Result := false;
+    post.Free;
+  end;
+End;
+{$endregion}
+
+{$region 'Função Add Log de Diferença entre Campos'}
+function TdmPrincipal.AddLogPlacas(AnoFabricacao, CaixaCambio, CapacidadeCarga, Carroceria,
+  CilindradasCm3, Cmt, Combustivel, Cor, EixoTraseiroDiferencial,
+  MarcaModelo, Municipio, NumeroChassi, NumeroMotor, Pbt, Placa,
+  PotenciaCavalos, Procedencia, QuantidadeEixos, QuantidadePassageiros,
+  SituacaoChassi, TipoCarroceria, TipoMontagem, TipoVeiculo,
+  Uf: String): boolean;
+Var
+  post : TFDQuery;
+Begin
+  try
+    post := TFDQuery.Create(nil);
+    post.Connection := cnnConexao;
+
+    with post do
+      Begin
+        Close;
+        SQL.Clear;
+        SQL.Add('insert into tab_log_compare');
+        SQL.Add('(AnoFabricacao, CaixaCambio, CapacidadeCarga, Carroceria, CilindradasCm3,');
+        SQL.Add('Cmt, Combustivel, Cor, eixotraseirodiferencial, MarcaModelo, Municipio,');
+        SQL.Add('NumeroChassi, NumeroMotor, Pbt, Placa, PotenciaCavalos, Procedencia, QuantidadeEixos,');
+        SQL.Add('QuantidadePassageiros, SituacaoChassi, TipoCarroceria, TipoMontagem, TipoVeiculo, Uf)');
+        SQL.Add('values');
+        SQL.Add('(:AnoFabricacao, :CaixaCambio, :CapacidadeCarga, :Carroceria, :CilindradasCm3,');
+        SQL.Add(':Cmt, :Combustivel, :Cor, :eixotraseirodiferencial, :MarcaModelo, :Municipio,');
+        SQL.Add(':NumeroChassi, :NumeroMotor, :Pbt, :Placa, :PotenciaCavalos, :Procedencia, :QuantidadeEixos,');
+        SQL.Add(':QuantidadePassageiros, :SituacaoChassi, :TipoCarroceria, :TipoMontagem, :TipoVeiculo, :Uf)');
+
+        Params.ParamByName('AnoFabricacao').value := AnoFabricacao;
+        Params.ParamByName('CaixaCambio').value := CaixaCambio;
+        Params.ParamByName('CapacidadeCarga').value := CapacidadeCarga;
+        Params.ParamByName('Carroceria').value := Carroceria;
+        Params.ParamByName('CilindradasCm3').value := CilindradasCm3;
+        Params.ParamByName('Cmt').value := Cmt;
+        Params.ParamByName('Combustivel').value := Combustivel;
+        Params.ParamByName('Cor').value := Cor;
+        Params.ParamByName('eixotraseirodiferencial').value := EixoTraseiroDiferencial;
+        Params.ParamByName('MarcaModelo').value := MarcaModelo;
+        Params.ParamByName('Municipio').value := Municipio;
+        Params.ParamByName('NumeroChassi').value := NumeroChassi;
+        Params.ParamByName('NumeroMotor').value := NumeroMotor;
+        Params.ParamByName('Pbt').value := Pbt;
+        Params.ParamByName('Placa').value := Placa;
+        Params.ParamByName('PotenciaCavalos').value := PotenciaCavalos;
+        Params.ParamByName('Procedencia').value := Procedencia;
+        Params.ParamByName('QuantidadeEixos').value := QuantidadeEixos;
+        Params.ParamByName('QuantidadePassageiros').value := QuantidadePassageiros;
+        Params.ParamByName('SituacaoChassi').value := SituacaoChassi;
+        Params.ParamByName('TipoCarroceria').value := TipoCarroceria;
+        Params.ParamByName('TipoMontagem').value := TipoMontagem;
+        Params.ParamByName('TipoVeiculo').value := TipoVeiculo;
+        Params.ParamByName('Uf').value := Uf;
+
+        ExecSQL;
+
+        Result := true;
+
+      End;
+    post.Free;
+  Except
+    Result := false;
+    post.Free;
+  end;
+End;
+{$endregion}
+
+//Lanca Log em txt lancamentos das Placas
+{$region 'Arquivo de Log em txt'}
+class function TdmPrincipal.Log(txt:String):Boolean;
+var
+  f   : TextFile;
+  Arq : string;
+begin
+  Arq := ExtractFilePath(ParamStr(0)) + 'log.txt'; //txt na raiz do .exe
+
+  AssignFile(f, Arq);
+  Append(f);
+  Writeln(f, txt);
+  Flush(f);
+  CloseFile(f);
+end;
+{$endregion}
+
+//Lanca Log em txt Confronto em tabelas Veiculos (api antiga) vs Placas (api atual)
+{$region 'Arquivo de Log em txt'}
+class function TdmPrincipal.LogPlacas(txt:String):Boolean;
+var
+  f   : TextFile;
+  Arq : string;
+begin
+  Arq := ExtractFilePath(ParamStr(0)) + 'logplacas.txt';  //txt na raiz do .exe
+
+  AssignFile(f, Arq);
+  Append(f);
+  Writeln(f, txt);
+  Flush(f);
+  CloseFile(f);
+end;
+{$endregion}
+
+function TdmPrincipal.AtualizaContador:Boolean;
+Var
+  get, post : TFDQuery;
+Begin
+  try
+    get := TFDQuery.Create(nil);
+    get.Connection := cnnConexao;
+
+    with post do
+      Begin
+        Close;
+        SQL.Clear;
+        SQL.Add('SELECT * FROM tab_qtde_consulta WHERE to_char(data_lancamento, ''DD-MON-YYYY'') = to_char(current_timestamp, ''DD-MON-YYYY'');');
+        Open;
+      End;
+
+    post := TFDQuery.Create(nil);
+    post.Connection := cnnConexao;
+      if get.RecordCount > 0 then
+        Begin
+          with post do
+            Begin
+              Close;
+              SQL.Clear;
+              SQl.Add('INSERT INTO tab_qtde_consulta (qtde_oficial, qtde_standby, qtde_local, data_lancamento) VALUES (0, 0, 0, current_timestamp)');
+              ExecSQL;
+            End;
+        End
+      else
+        Begin
+          with post do
+            Begin
+              Close;
+              SQL.Clear;
+              SQl.Add('UPDATE tab_qtde_consulta set qtde_oficial = qtde_oficial + 1, qtde_standby = qtde_standby + 1, qtde_local = qtde_local + 1');
+              SQl.Add('WHERE to_char(data_lancamento, ''DD-MON-YYYY'') = to_char(current_timestamp, ''DD-MON-YYYY'');');
+              ExecSQL;
+            End;
+        End;
+  finally
+    get.Free;
+    post.Free;
+  end;
+End;
+
+
+end.

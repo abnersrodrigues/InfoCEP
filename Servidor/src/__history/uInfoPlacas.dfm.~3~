@@ -1,0 +1,9 @@
+object InfoPlacas: TInfoPlacas
+  OldCreateOrder = False
+  OnCreate = ServiceCreate
+  DisplayName = 'InfoPlacas'
+  OnStart = ServiceStart
+  OnStop = ServiceStop
+  Height = 195
+  Width = 227
+end

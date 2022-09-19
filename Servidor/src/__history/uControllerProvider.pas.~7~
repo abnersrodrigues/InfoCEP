@@ -1,0 +1,56 @@
+unit uControllerProvider;
+
+interface
+
+Uses
+  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections
+
+  //Uses Aplicação
+  , uControllerRotas, uDataModule, uControllerConst
+
+  // Componentes
+  , Horse, Horse.Jhonson, Horse.Compression, Horse.HandleException, Horse.BasicAuthentication
+  , Horse.Query, DataSet.Serialize, Horse.Logger, Horse.Logger.Provider.Console
+
+
+  ;
+
+type
+  TControllerProvider = class
+  private
+
+  Public
+    class procedure Inicializar; static;
+  End;
+
+implementation
+
+
+class procedure TControllerProvider.Inicializar;
+var
+  dmPrincipal     : TdmPrincipal;
+  LLogFileConfig  : THorseLoggerConsoleConfig;
+Begin
+  dmPrincipal := TdmPrincipal.Create(nil);
+
+  LLogFileConfig := THorseLoggerConsoleConfig.New
+    .SetLogFormat('${request_clientip} [${time}] ${response_status}');
+  THorseLoggerManager.RegisterProvider(THorseLoggerProviderConsole.New());
+  THorse.Use(THorseLoggerManager.HorseCallback);
+
+  THorse
+    .Use(Compression())
+    .Use(Jhonson)
+    .Use(Query)
+    .Use(HorseBasicAuthentication(
+     function(const AUsername, APassword: string): Boolean
+     begin
+       Result := AUsername.Equals(uControllerConst.APILOGIN) and APassword.Equals(uControllerConst.APIPASSWORD);
+     end));
+
+  TControllerRotas.Registry;
+
+  THorse.Listen(9009);
+End;
+
+end.

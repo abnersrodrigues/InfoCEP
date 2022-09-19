@@ -1,0 +1,118 @@
+unit uModel.Querys;
+
+interface
+
+Uses
+  System.SysUtils, Vcl.Dialogs, uGUID,
+  uModel.Conexao.Principal, uInterfaces.Principal, System.JSON,
+
+  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf,
+  FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
+  FireDAC.Phys, FireDAC.Phys.PG, FireDAC.Phys.PGDef, FireDAC.VCLUI.Wait,
+  FireDAC.Stan.ExprFuncs, FireDAC.Phys.SQLiteDef, FireDAC.Phys.SQLite,
+  FireDAC.Comp.UI, Data.DB, FireDAC.Comp.Client,  FireDAC.DApt;
+
+Type
+
+  TModelQuerys = class(TInterfacedObject, iQuery)
+
+    private
+
+      FParent : iConexao;
+      FQry    : TFDQuery;
+
+    public
+
+      constructor Create(Parent : iConexao);
+      destructor Destroy; override;
+      class function New(Parent : iConexao) : iQuery;
+
+      function QryPost(json : TJSONObject) : iQuery;
+      function QryGetCEP(sCEP: string) : iQuery;
+      function QryGetAll : iQuery;
+      function DataSet : TDataSet;
+  end;
+
+implementation
+
+{ TModelQuerys }
+
+constructor TModelQuerys.Create(Parent: iConexao);
+begin
+  FParent := Parent;
+
+  FQry := TFDQuery.Create(nil);
+
+  if not Assigned(FParent) then
+    FParent := TModelConexao.New;
+
+  FQry.Connection := TFDConnection(FParent.Conexao);
+end;
+
+function TModelQuerys.DataSet: TDataSet;
+begin
+  Result := FQry;
+end;
+
+destructor TModelQuerys.Destroy;
+begin
+  FreeAndNil(FQry);
+  inherited;
+end;
+
+class function TModelQuerys.New(Parent : iConexao): iQuery;
+begin
+  Result := Self.Create(Parent);
+end;
+
+function TModelQuerys.QryGetAll: iQuery;
+begin
+  Result := Self;
+end;
+
+function TModelQuerys.QryGetCEP(sCEP: string): iQuery;
+begin
+  Result := Self;
+
+  with FQry do
+    Begin
+      Close;
+      SQL.Clear;
+      SQL.Add('select * from tab_cep');
+      SQL.Add('where cep = :cep');
+        Params.ParamByName('cep').AsString := sCEP;
+      Open;
+    End;
+end;
+
+function TModelQuerys.QryPost(json: TJSONObject): iQuery;
+begin
+  Result := Self;
+
+  with FQry do
+    Begin
+      Close;
+      SQL.Clear;
+
+      SQL.Add('insert into tab_cep ( id, cep, address_type, address_name, address, state, district, lat, lng, city, city_ibge, ddd )');
+      SQL.Add('values ( :id, :cep, :address_type, :address_name, :address, :state, :district, :lat, :lng, :city, :city_ibge, :ddd )');
+
+        Params.ParamByName('id').AsString           := uGUID.getNewOne();
+        Params.ParamByName('cep').AsString          := json.GetValue('cep').Value;
+        Params.ParamByName('address_type').AsString := json.GetValue('address_type').Value;
+        Params.ParamByName('address_name').AsString := json.GetValue('address_name').Value;
+        Params.ParamByName('address').AsString      := json.GetValue('address').Value;
+        Params.ParamByName('state').AsString        := json.GetValue('state').Value;
+        Params.ParamByName('district').AsString     := json.GetValue('district').Value;
+        Params.ParamByName('lat').AsString          := json.GetValue('lat').Value;
+        Params.ParamByName('lng').AsString          := json.GetValue('lng').Value;
+        Params.ParamByName('city').AsString         := json.GetValue('city').Value;
+        Params.ParamByName('city_ibge').AsString    := json.GetValue('city_ibge').Value;
+        Params.ParamByName('ddd').AsString          := json.GetValue('ddd').Value;
+
+
+      ExecSQL;
+    End;
+end;
+
+end.

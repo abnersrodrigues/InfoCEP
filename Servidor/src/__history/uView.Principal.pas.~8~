@@ -1,0 +1,73 @@
+unit uView.Principal;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uController.Provider, Data.DB, Vcl.Grids,
+  Vcl.DBGrids, uModel.Principal, Vcl.StdCtrls, Vcl.Buttons, uController.Compare,
+  Vcl.ExtCtrls;
+
+type
+  TfrmPrincipal = class(TForm)
+    btn_comparar: TSpeedButton;
+    pnl_principal: TPanel;
+    btn_sair: TSpeedButton;
+    btn_gerar_ini: TSpeedButton;
+    pnl_fundo: TPanel;
+    procedure FormDestroy(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure btn_compararClick(Sender: TObject);
+    procedure btn_gerar_iniClick(Sender: TObject);
+    procedure btn_sairClick(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+
+    Provider : TControllerProvider;
+
+  end;
+
+var
+  frmPrincipal: TfrmPrincipal;
+
+implementation
+
+{$R *.dfm}
+
+procedure TfrmPrincipal.FormDestroy(Sender: TObject);
+begin
+  dmPrincipal.Free;
+  Provider.free;
+end;
+
+procedure TfrmPrincipal.btn_compararClick(Sender: TObject);
+begin
+  TControllerCompare.GetAll;
+end;
+
+procedure TfrmPrincipal.btn_gerar_iniClick(Sender: TObject);
+Var
+  IniFile : String;
+begin
+  IniFile := ChangeFileExt( Application.Exename, '.ini');
+
+  if not FileExists(IniFile) then
+    dmPrincipal.fnc_GravarIni;
+end;
+
+procedure TfrmPrincipal.btn_sairClick(Sender: TObject);
+begin
+  Application.Terminate;
+end;
+
+procedure TfrmPrincipal.FormCreate(Sender: TObject);
+begin
+  btn_gerar_iniClick(Self);  //Criando arquivo ini
+
+  Provider := TControllerProvider.Create;
+  Provider.Inicializar;
+end;
+
+end.

@@ -1,0 +1,40 @@
+program ServiceInfoCEP;
+
+uses
+  SvcMgr,
+  forms,
+  uView.Principal in 'src\View\uView.Principal.pas' {frmPrincipal},
+  uService.Principal in 'src\Service\uService.Principal.pas' {InfoCepAPI: TService},
+  uController.Gets in 'src\Controller\uController.Gets.pas',
+  uController.Provider in 'src\Controller\uController.Provider.pas',
+  uController.Rotas in 'src\Controller\uController.Rotas.pas',
+  uModel.Conexao.Principal in 'src\Model\uModel.Conexao.Principal.pas',
+  uInterfaces.Principal in 'src\Interfaces\uInterfaces.Principal.pas',
+  uModel.Querys in 'src\Model\uModel.Querys.pas',
+  uGUID in 'src\Auxiliar\uGUID.pas';
+
+{$R *.RES}
+
+begin
+  //Modo Debugging
+  if DebugHook <> 0 then
+  begin
+    Forms.Application.Initialize;
+    Forms.Application.CreateForm(TfrmPrincipal, frmPrincipal);
+    Application.CreateForm(TfrmPrincipal, frmPrincipal);
+    Application.Run;
+  end
+  else
+  begin
+    if not SvcMgr.Application.DelayInitialize or SvcMgr.Application.Installing then
+      SvcMgr.Application.Initialize;
+    SvcMgr.Application.CreateForm(TInfoCepAPI, InfoCepAPI);
+    SvcMgr.Application.Run;
+  end;
+
+
+//  if not SvcMgr.Application.DelayInitialize or SvcMgr.Application.Installing then
+//    SvcMgr.Application.Initialize;
+//  SvcMgr.Application.CreateForm(TInfoCepAPI, InfoCepAPI);
+//  SvcMgr.Application.Run;
+end.

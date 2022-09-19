@@ -1,0 +1,74 @@
+unit uController.APIApontaHora;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections
+
+  //Uses Aplicação
+  , uDataModule
+
+  // Componentes
+  , Horse, Horse.Jhonson, Horse.Compression, Horse.HandleException, Horse.BasicAuthentication
+  , DataSet.Serialize, Horse.Query, RESTRequest4D, Horse.Logger, Horse.Logger.Provider.Console
+  , Horse.Paginate
+
+  //uses para Firedac
+  , FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
+  FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
+  FireDAC.Phys, FireDAC.VCLUI.Wait, FireDAC.Phys.PGDef, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
+  FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client, FireDAC.Phys.PG,
+  FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs
+
+  ;
+
+type
+  TControllerAPIWhatsApp = class
+  private
+
+  public
+    class function ApiOficial: Boolean; static;
+    class function ApiStandyBy: Boolean; static;
+
+  end;
+
+implementation
+
+class function TControllerAPIWhatsApp.JsonWhatsApp(origem: string): TJSONObject;
+Begin
+  dmPrincipal.tem_resp_whatsapp.open;
+  with dmPrincipal.tem_resp_whatsapp do
+    begin
+      Append;
+        FieldByName('placa').Value              := dmPrincipal.temp_extraplaca.Value;
+        FieldByName('marca').Value              := dmPrincipal.temp_principalMARCA.Value;
+        FieldByName('modelo').Value             := dmPrincipal.temp_principalMODELO.Value;
+        FieldByName('cor').Value                := dmPrincipal.temp_principalcor.Value;
+        FieldByName('tipo_veiculo').Value       := dmPrincipal.temp_extratipo_veiculo.Value;
+        FieldByName('especie').Value            := dmPrincipal.temp_extraespecie.Value;
+        FieldByName('chassi').Value             := dmPrincipal.temp_extrachassi.Value;
+        FieldByName('caixa_de_cambio').Value    := dmPrincipal.temp_extracaixa_cambio.Value;
+        FieldByName('motor').Value              := dmPrincipal.temp_extramotor.Value;
+        FieldByName('cilindradas').Value        := dmPrincipal.temp_extracilindradas.Value;
+        FieldByName('eixos').Value              := dmPrincipal.temp_extraeixos.Value;
+        FieldByName('combustivel').Value        := dmPrincipal.temp_extracombustivel.Value;
+        FieldByName('nacionalidade').Value      := dmPrincipal.temp_extranacionalidade.Value;
+        FieldByName('ano_modelo').Value         := dmPrincipal.temp_extraano_modelo.Value;
+        FieldByName('ano_fabricacao').Value     := dmPrincipal.temp_extraano_fabricacao.Value;
+        FieldByName('data_hora_consulta').Value := Now();
+
+        case origem.ToInteger() of
+          1: FieldByName('grv_pesquisa').Value       := 'APIOfial';
+          2: FieldByName('grv_pesquisa').Value       := 'APIStandBy';
+          3: FieldByName('grv_pesquisa').Value       := 'BD Local';
+        end;
+
+
+      Post;
+    end;
+  Result := dmPrincipal.tem_resp_whatsapp.ToJSONObject();
+End;
+
+
+end.
+

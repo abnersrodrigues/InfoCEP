@@ -1,0 +1,25 @@
+program InfoCep;
+
+uses
+  Vcl.SvcMgr,
+  uService.Principal in 'src\Service\uService.Principal.pas' {ServiceInfoCEP: TService},
+  uView.Principal in 'src\View\uView.Principal.pas' {frm_principal};
+
+{$R *.RES}
+
+begin
+  if DebugHook <> 0 then
+  begin
+    Forms.Application.Initialize;
+    Forms.Application.CreateForm(TfrmPrincipal, frmPrincipal);
+  Application.CreateForm(Tfrm_principal, frm_principal);
+  Forms.Application.Run;
+  end
+  else
+  begin
+    if not SvcMgr.Application.DelayInitialize or SvcMgr.Application.Installing then
+      SvcMgr.Application.Initialize;
+    SvcMgr.Application.CreateForm(TInfoPlacasAPI, InfoPlacasAPI);
+    SvcMgr.Application.Run;
+  end;
+end.

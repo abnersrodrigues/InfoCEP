@@ -1,0 +1,30 @@
+unit uController.Gets;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections,
+  uModel.Principal, DataSet.Serialize;
+
+type
+  TControllerAPIWhatsApp = class
+  private
+
+  public
+    class procedure GetDate(Req: THorseRequest; Res: THorseResponse; Next: TProc); static;
+
+  end;
+
+implementation
+
+{$region 'Pesquisa nas Api's Externas vs Gravar no banco'}
+class procedure TControllerRotas.GetDate( Req: THorseRequest;
+                                          Res: THorseResponse;
+                                          Next: TProc);
+begin
+  Res.Send(FormatDateTime('dd/mm/yyyy hh:ss', Now))
+end;
+{$endregion}
+
+
+end.

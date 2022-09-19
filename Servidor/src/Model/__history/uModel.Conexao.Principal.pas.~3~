@@ -1,0 +1,17 @@
+unit uModel.Conexao.Principal;
+
+interface
+
+Type
+
+  TModelConexao = class(TInterfacedObject, iConexao)
+
+    private
+
+    public
+
+  end;
+
+implementation
+
+end.

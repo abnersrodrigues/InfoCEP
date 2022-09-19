@@ -1,0 +1,253 @@
+unit uControllerCompare;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections
+
+  //Uses Aplicação
+  , uDataModule
+
+  // Componentes
+  , Horse, Horse.Jhonson, Horse.Compression, Horse.HandleException, Horse.BasicAuthentication
+  , DataSet.Serialize, Horse.Query, RESTRequest4D, Horse.Logger, Horse.Logger.Provider.Console
+  , Horse.Paginate
+
+  //uses para Firedac
+  , FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
+  FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
+  FireDAC.Phys, FireDAC.VCLUI.Wait, FireDAC.Phys.PGDef, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
+  FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client, FireDAC.Phys.PG,
+  FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs
+
+  ;
+
+type
+  TControllerCompare = class
+  private
+    class function LimparString: Boolean;
+
+  public
+    class procedure GetAll; static;
+  end;
+
+implementation
+
+Var
+  AnoFabricacao, CaixaCambio, CapacidadeCarga, Carroceria,
+  CilindradasCm3, Cmt, Combustivel, Cor, EixoTraseiroDiferencial,
+  MarcaModelo, Municipio, NumeroChassi, NumeroMotor, Pbt, Placa,
+  PotenciaCavalos, Procedencia, QuantidadeEixos, QuantidadePassageiros,
+  SituacaoChassi, TipoCarroceria, TipoMontagem, TipoVeiculo,  Uf: String;
+
+
+{ TControllerRotas }
+
+{$region 'Função para Comparar campos na Table'}
+class procedure TControllerCompare.GetAll;
+Var dmPrincipal     : TdmPrincipal;
+    qry             : TFDQuery;
+    qryCompare      : TFDQuery;
+begin
+  dmPrincipal := TdmPrincipal.Create(nil);
+  try
+    qry := TFDQuery.Create(nil);
+    qry.Connection := dmPrincipal.cnnConexao;
+    with qry do
+      Begin
+            Close;
+            SQL.Clear;
+            SQL.Add('SELECT * FROM tab_veiculos');
+            SQL.Add('order by 1 asc');
+            Open;
+
+            if qry.RecordCount = 0 then
+              exit
+            else
+              Begin
+                qryCompare := TFDQuery.Create(nil);
+                qryCompare.Connection := dmPrincipal.cnnConexao;
+                while not qry.Eof  do
+                  Begin
+                    with qryCompare do
+                      Begin
+                        Close;
+                        SQL.Clear;
+                        SQL.Add('SELECT t1.placa, t1.ano_fabricacao, t1.ano_modelo, t1.combustivel, t2.cor, t2.marca, t2.modelo,');
+                        SQL.Add('t1.municipio, t1.chassis, t1.motor, t1.eixos, t1.tipo_veiculo, t1.uf');
+                        SQL.Add('from tab_placas_extra t1');
+                        SQL.Add('INNER JOIN tab_placas t2 ON t2.id = t1.id_placa');
+                        SQL.Add('WHERE (t1.placa LIKE :placa) OR (t1.placa_modelo_novo LIKE :placa)');
+                          Params.ParamByName('placa').AsString  := '%' + qry.FieldByName('placa').AsString + '%';
+                        Open;
+
+                        if qryCompare.RecordCount = 0 then
+                          dmPrincipal.LogPlacas('Placa :'+ qry.FieldByName('placa').AsString +' não encontrada')
+                        else
+                          Begin
+                            LimparString;
+
+                            //Validando diferença campo de Fabricação
+                            if (qry.FieldByName('anofabricacao').AsString) <>
+                               (qryCompare.FieldByName('ano_fabricacao').AsString + '/' + qryCompare.FieldByName('ano_modelo').AsString)
+                            then
+                              AnoFabricacao   := 'old: ' + qry.FieldByName('anofabricacao').AsString + '| new: '+ qryCompare.FieldByName('ano_fabricacao').AsString + '/' + qryCompare.FieldByName('ano_modelo').AsString;
+
+                            CaixaCambio       := '';
+                            CapacidadeCarga   := '';
+                            Carroceria        := '';
+                            CilindradasCm3    := '';
+                            Cmt               := '';
+
+                            //Validando diferença campo de Fabricação
+                            if qry.FieldByName('combustivel').AsString <>
+                               qryCompare.FieldByName('combustivel').AsString
+                            then
+                              Combustivel     := 'old: ' + qry.FieldByName('combustivel').AsString + '| new: '+ qryCompare.FieldByName('combustivel').AsString;
+
+                            //Validando diferença campo de Cor
+                            if qry.FieldByName('cor').AsString <>
+                               qryCompare.FieldByName('cor').AsString
+                            then
+                              Cor             := 'old: ' + qry.FieldByName('cor').AsString + '| new: '+ qryCompare.FieldByName('cor').AsString;
+
+                            EixoTraseiroDiferencial := '';
+
+                            //Validando diferença campo de Marca Modelo
+                            if (qry.FieldByName('marcamodelo').AsString) <>
+                               (qryCompare.FieldByName('marca').AsString + ' ' +  qryCompare.FieldByName('modelo').AsString)
+                            then
+                              MarcaModelo     := 'old: ' + qry.FieldByName('marcamodelo').AsString + '| new: '+ qryCompare.FieldByName('marca').AsString + ' ' + qryCompare.FieldByName('modelo').AsString;
+
+                            //Validando diferença campo de Municipio
+                            if UpperCase(qry.FieldByName('municipio').AsString) <>
+                               qryCompare.FieldByName('municipio').AsString
+                            then
+                              Municipio       := 'old: ' + qry.FieldByName('municipio').AsString + '| new: '+ qryCompare.FieldByName('municipio').AsString;
+
+                            //Validando diferença campo de Numero do Chassi
+                            if qry.FieldByName('numerochassi').AsString <>
+                               qryCompare.FieldByName('chassis').AsString
+                            then
+                              NumeroChassi    := 'old: ' + qry.FieldByName('numerochassi').AsString + '| new: '+ qryCompare.FieldByName('chassis').AsString;
+
+                            //Validando diferença campo de Numero do Motor
+                            if qry.FieldByName('numeromotor').AsString <>
+                               qryCompare.FieldByName('motor').AsString
+                            then
+                              NumeroMotor     := 'old: ' + qry.FieldByName('numeromotor').AsString + '| new: '+ qryCompare.FieldByName('motor').AsString;
+
+                            Pbt               := '';
+
+                            // Campo Placa inserindo sem comparação, devido a localição de busca
+                            Placa             := qryCompare.FieldByName('placa').AsString;
+
+                            PotenciaCavalos   := '';
+                            Procedencia       := '';
+
+                            //Validando diferença campo de Qtde Eixos
+                            if qry.FieldByName('quantidadeeixos').AsString <>
+                               qryCompare.FieldByName('eixos').AsString
+                            then
+                              QuantidadeEixos := 'old: ' + qry.FieldByName('quantidadeeixos').AsString + '| new: '+ qryCompare.FieldByName('eixos').AsString;
+
+                            QuantidadePassageiros := '';
+                            SituacaoChassi    := '';
+                            TipoCarroceria    := '';
+                            TipoMontagem      := '';
+
+                            //Validando diferença campo tipoveiculo
+                            if qry.FieldByName('tipoveiculo').AsString <>
+                               qryCompare.FieldByName('tipo_veiculo').AsString
+                            then
+                              TipoVeiculo := 'old: ' + qry.FieldByName('tipoveiculo').AsString + '| new: '+ qryCompare.FieldByName('tipo_veiculo').AsString;
+
+                            //Validando diferença campo UF
+                            if qry.FieldByName('uf').AsString <>
+                               qryCompare.FieldByName('uf').AsString
+                            then
+                              Uf := 'old: ' + qry.FieldByName('uf').AsString + '| new: '+ qryCompare.FieldByName('uf').AsString;
+
+
+                           //inserindo na tabela de LogCompare
+                            if not
+                              dmPrincipal.AddLogPlacas(
+                                            AnoFabricacao,
+                                            CaixaCambio,
+                                            CapacidadeCarga,
+                                            Carroceria,
+                                            CilindradasCm3,
+                                            Cmt,
+                                            Combustivel,
+                                            Cor,
+                                            EixoTraseiroDiferencial,
+                                            MarcaModelo,
+                                            Municipio,
+                                            NumeroChassi,
+                                            NumeroMotor,
+                                            Pbt,
+                                            Placa,
+                                            PotenciaCavalos,
+                                            Procedencia,
+                                            QuantidadeEixos,
+                                            QuantidadePassageiros,
+                                            SituacaoChassi,
+                                            TipoCarroceria,
+                                            TipoMontagem,
+                                            TipoVeiculo,
+                                            Uf
+                                            )
+                            then
+                              dmPrincipal.LogPlacas('log da placa :'+ Placa +' não inserida na tabela erro no insert')
+
+                          End;
+                      End;
+                    qry.Next;
+                  End;
+              End;
+          End;
+  finally
+    qry.free;
+    qryCompare.free;
+    dmPrincipal.free;
+  end;
+end;
+{$endregion}
+
+{$region 'Forçando limpeza das string para o lançamento de log'}
+class function TControllerCompare.LimparString:Boolean;
+Begin
+  try
+    AnoFabricacao           := '';
+    CaixaCambio             := '';
+    CapacidadeCarga         := '';
+    Carroceria              := '';
+    CilindradasCm3          := '';
+    Cmt                     := '';
+    Combustivel             := '';
+    Cor                     := '';
+    EixoTraseiroDiferencial := '';
+    MarcaModelo             := '';
+    Municipio               := '';
+    NumeroChassi            := '';
+    NumeroMotor             := '';
+    Pbt                     := '';
+    Placa                   := '';
+    PotenciaCavalos         := '';
+    Procedencia             := '';
+    QuantidadeEixos         := '';
+    QuantidadePassageiros   := '';
+    SituacaoChassi          := '';
+    TipoCarroceria          := '';
+    TipoMontagem            := '';
+    TipoVeiculo             := '';
+    Uf                      := '';
+
+    Result := true;
+  Except
+    Result := false;
+  end;
+End;
+{$endregion}
+
+end.

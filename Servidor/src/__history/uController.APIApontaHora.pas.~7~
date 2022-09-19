@@ -1,0 +1,67 @@
+unit uController.APIApontaHora;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections,
+  uDataModule, DataSet.Serialize;
+
+
+type
+  TControllerAPIApontaHora = class
+  private
+
+
+  public
+    class function JsonApontaHora(origem: string): TJSONObject; static;
+  end;
+
+implementation
+
+
+class function TControllerAPIApontaHora.JsonApontaHora(origem: string): TJSONObject;
+Begin
+  dmPrincipal.temp_resp_apontahora.open;
+  with dmPrincipal.temp_resp_apontahora do
+    begin
+      Append;
+      FieldByName('municipio').value                    := dmPrincipal.temp_extramunicipio.Value;
+      FieldByName('uf').value                           := dmPrincipal.temp_principaluf.Value;
+      FieldByName('ano_fabricacao').value               := dmPrincipal.temp_extraano_fabricacao.Value+'/'+dmPrincipal.temp_extraano_modelo.Value;
+      FieldByName('cmt').value                          := '';
+      FieldByName('cor').value                          := dmPrincipal.temp_principalcor.Value;
+      FieldByName('pbt').value                          := dmPrincipal.temp_extrapeso_bruto_total.Value;
+      FieldByName('placa').value                        := dmPrincipal.temp_principalplaca.Value;
+      FieldByName('numero_chassi').value                := dmPrincipal.temp_extrachassi.Value;
+      FieldByName('numero_motor').value                 := dmPrincipal.temp_extramotor.Value;
+      FieldByName('potencia_cavalos').value             := '';
+      FieldByName('carroceria').value                   := dmPrincipal.temp_extracarroceria.Value;
+      FieldByName('cilindradas_cm3').value              := dmPrincipal.temp_extracilindradas.Value;
+      FieldByName('combustivel').value                  := dmPrincipal.temp_extracombustivel.Value;
+      FieldByName('procedencia').value                  := dmPrincipal.temp_extranacionalidade.Value;
+      FieldByName('caixa_cambio').value                 := dmPrincipal.temp_extracaixa_cambio.Value;
+      FieldByName('tipo_montagem').value                := dmPrincipal.temp_extratipo_montagem.Value;
+      FieldByName('tipo_carroceria').value              := dmPrincipal.temp_extratipo_carroceria.Value;
+      FieldByName('tipo_veiculo').value                 := dmPrincipal.temp_extratipo_veiculo.Value;
+      FieldByName('eixo_traseiro_diferencial').value    := dmPrincipal.temp_extraeixo_traseiro_dif.Value;
+      FieldByName('situacao_chassi').value              := dmPrincipal.temp_extrasituacao_chassi.Value;
+      FieldByName('capacidade_carga').value             := dmPrincipal.temp_extrapeso_bruto_total.Value;
+      FieldByName('quantidade_eixos').value             := dmPrincipal.temp_extraeixos.Value;
+      FieldByName('quantidade_passageiros').value       := dmPrincipal.temp_extraquantidade_passageiro.Value;
+      FieldByName('marca_modelo').value                 := dmPrincipal.temp_principalMODELO.Value;
+
+        case origem.ToInteger() of
+          1: FieldByName('grv_pesquisa').Value       := 'APIOfial';
+          2: FieldByName('grv_pesquisa').Value       := 'APIStandBy';
+          3: FieldByName('grv_pesquisa').Value       := 'BDLocal';
+        end;
+
+
+      Post;
+    end;
+  Result := dmPrincipal.temp_resp_apontahora.ToJSONObject();
+End;
+
+
+end.
+

@@ -1,0 +1,236 @@
+unit uControllerRotas;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections
+
+  //Uses Aplicação
+  , uDataModule, uController.APIExterna
+
+  // Componentes
+  , Horse, Horse.Jhonson, Horse.Compression, Horse.HandleException, Horse.BasicAuthentication
+  , DataSet.Serialize, Horse.Query, RESTRequest4D, Horse.Logger, Horse.Logger.Provider.Console
+  , Horse.Paginate
+
+  //uses para Firedac
+  , FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
+  FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
+  FireDAC.Phys, FireDAC.VCLUI.Wait, FireDAC.Phys.PGDef, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
+  FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client, FireDAC.Phys.PG,
+  FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs
+
+  ;
+
+type
+  TControllerRotas = class
+  private
+
+  public
+
+    class procedure Registry;
+
+    class procedure Get(Req: THorseRequest; Res: THorseResponse; Next: TProc); static;
+    class procedure GetAll(Req: THorseRequest; Res: THorseResponse; Next: TProc); static;
+
+  end;
+
+implementation
+
+Var
+  sPlaca        : String;
+  sOrigem       : String;
+{ TControllerRotas }
+
+
+{$region 'Pesquisa na tabela de Api Externa vs Gravar no banco'}
+class procedure TControllerRotas.Get(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+Var
+    qry             : TFDQuery;
+    qryExtra        : TFDQuery;
+
+    Resp            : IResponse;
+
+    json            : String;
+    jsonObj         : TJSONObject;
+    jsonObjExtra    : TJSONObject;
+    jsonObjFipe     : TJSONObject;
+    jsonArrayDados  : TJSONArray;
+begin
+  sPlaca  := UpperCase(StringReplace(trim(Req.Params['placa']), '-', '', [rfReplaceAll])); // tratando a Placa
+  sOrigem := Req.Params['origem'];
+
+  try
+    qry := TFDQuery.Create(nil);
+    qry.Connection := dmPrincipal.cnnConexao;
+    with qry do
+      Begin
+        Close;
+        SQL.Clear;
+        SQL.Add('select * from tab_placas');
+        SQL.Add('where placa like :placa');
+          Params.ParamByName('placa').AsString  := '%' + sPlaca + '%';
+        Open;
+
+        if qry.recordcount = 0 then // ja existe base local?
+{$region 'Nova Pesquisa'}
+          Begin
+            if Length(sPlaca) <> 7 then    //tratando se a placa vem com qtde de caracter a mais
+              Begin
+                jsonObj := TJSONObject.Create;
+                jsonObj.AddPair('Erro','Erro na consulta: Verifique a placa!');
+                Res.Send(jsonObj).Status(THTTPStatus.NotAcceptable);
+                Exit;
+              End;
+
+            try
+              if not TControllerAPIExterna.ApiOficial(sPlaca) then // ApiOficial -- sempre sera verificado nesta primeiro devido ao maior numero de req dia
+                Begin
+                  try
+                    // se der erro na Oficial vai tentar na StandBy
+                    ApiStandyBy(sPlaca); // ApiStandBy
+                    dmPrincipal.AddPlaca;
+
+                    if sOrigem = 'WhatsApp' then
+                      Res.Send(JsonWhatsApp('2')); // Respondendo a Requisição
+                    else
+                      Res.Send(JsonApontaHora('2')); // Respondendo a Requisição
+
+                    dmPrincipal.Log('Sucess: '+ sPlaca +' inserido no banco');
+                  Except
+                    jsonObj := TJSONObject.Create;
+                    jsonObj.AddPair('Erro','Erro na consulta: Verifique a placa, e tente novamente!');
+                    Res.Send(jsonObj).Status(THTTPStatus.NotAcceptable);
+                    Exit;
+                  end;
+
+                  dmPrincipal.Log('Sucess: '+ sPlaca +' inserido no banco');
+                  Exit;
+                End
+              else
+                Begin
+                  if dmPrincipal.temp_extrachassi.asString = '' then // verificar se field "chassi" esta vazio -- se sim consultar na api secundária;
+                    Begin
+                      try
+                        ApiStandyBy(sPlaca); // ApiStandBy
+                        dmPrincipal.AddPlaca;
+                        Res.Send(JsonWhatsApp('2')); // Respondendo a Requisição
+                        dmPrincipal.Log('Sucess: '+ sPlaca +' inserido no banco');
+                      Except
+                        jsonObj := TJSONObject.Create;
+                        jsonObj.AddPair('Erro','Erro na consulta: Verifique a placa, e tente novamente!');
+                        Res.Send(jsonObj).Status(THTTPStatus.NotAcceptable);
+                        Exit;
+                      end;
+                    End
+                  else
+                    Begin
+                      dmPrincipal.AddPlaca; //Populando banco interno
+                      Res.Send(JsonWhatsApp('1')); // Respondendo a Requisição
+                      dmPrincipal.Log('Sucess: '+ sPlaca +' inserido no banco');
+                    End;
+                End;
+            Except
+              jsonObj := TJSONObject.Create;
+              jsonObj.AddPair('Erro','Erro na consulta: Verifique a placa, e tente novamente!');
+              Res.Send(jsonObj).Status(THTTPStatus.NotAcceptable);
+              Exit;
+            end;
+
+            //Retorno pra requisição
+            //Res.Send(dmPrincipal.temp_extra.ToJSONObject());
+          End
+{$endregion}
+        else
+{$region 'Placa já existente Pesquisa'}
+          Begin
+            dmPrincipal.Log('Wharning: '+ sPlaca +' já está no banco de dados da grv');
+
+            qryExtra                := TFDQuery.Create(nil);
+            qryExtra.Connection     := dmPrincipal.cnnConexao;
+            with qryExtra do
+              Begin
+                Close;
+                SQL.Clear;
+                SQL.Add('SELECT * FROM tab_placas_extra');
+                SQL.Add('WHERE id_placa = :id');
+                  Params.ParamByName('id').asInteger  := qry.FieldByName('id').AsInteger;
+                Open;
+              End;
+
+            jsonObj := qry.ToJSONObject();
+            jsonObjExtra := qryExtra.ToJSONObject();
+
+            dmPrincipal.temp_principal.LoadFromJSON(jsonObj);
+            dmPrincipal.temp_extra.LoadFromJSON(jsonObjExtra);
+
+            Res.Send(JsonWhatsApp('3')); // Respondendo a Requisição
+
+          End;
+{$endregion}
+      End;
+  finally
+    qry.free;
+    qryExtra.free;
+  end;
+end;
+{$endregion}
+
+{$region 'Pesquisa na tabela de Api antiga -- Convertida --'}
+class procedure TControllerRotas.GetAll(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+Var
+    qry             : TFDQuery;
+    Resp            : IResponse;
+
+    sInicio, sFim   : String;
+
+begin
+  sInicio           := Req.Params['sInicio'];
+  sFim              := Req.Params['sFim'];
+
+  try
+    qry := TFDQuery.Create(nil);
+    qry.Connection := dmPrincipal.cnnConexao;
+    with qry do
+      Begin
+        if sInicio.ToInteger = -2 then
+          Begin
+            Close;
+            SQL.Clear;
+            SQL.Add('select * from tab_veiculos');
+            SQL.Add('WHERE placa like :placa');
+            SQL.Add('order by 1 asc');
+              Params.ParamByName('placa').asString  := '%' + sFim + '%'; //por placa
+            Open;
+
+            Res.Send(qry.ToJsonArray);
+          End
+        else
+          Begin
+            Close;
+            SQL.Clear;
+            SQL.Add('select * from tab_veiculos');
+            SQL.Add('WHERE id > :sInicio AND id <= :sFim');
+            SQL.Add('order by 1 asc');
+              Params.ParamByName('sInicio').AsInteger   := sInicio.ToInteger; //parametro inicial
+              Params.ParamByName('sFim').AsInteger      := sFim.ToInteger; //parametro final
+            Open;
+
+            Res.Send(qry.ToJsonArray);
+          End;
+      End;
+  finally
+    qry.free;
+  end;
+end;
+{$endregion}
+
+{$region 'Rota API'}
+class procedure TControllerRotas.Registry;
+begin
+  THorse.Get('/get/:origem/:placa', Get);
+  THorse.Get('/get/all/:sInicio/:sFim', GetAll);
+end;
+{$endregion}
+
+end.

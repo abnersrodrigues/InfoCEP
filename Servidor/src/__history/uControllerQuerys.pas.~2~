@@ -1,0 +1,54 @@
+unit uControllerQuerys;
+
+interface
+
+uses System.SysUtils, System.Classes, Providers.Connection, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
+  FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.VCLUI.Wait,
+  FireDAC.Phys.PGDef, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet,
+  FireDAC.Comp.Client, FireDAC.Phys.PG, System.JSON, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs,
+  System.Generics.Collections;
+
+type
+  TControllerQuerys = class(TProviderConnection)
+
+  public
+    function List(const AQuery: TDictionary<string, string>): TFDQuery;
+
+  end;
+
+implementation
+
+{$R *.dfm}
+
+function ControllerQuerys.List(const AQuery: TDictionary<string, string>): TFDQuery;
+Var dmPrincipal : TdmPrincipal;
+    qry         : TFDQuery;
+begin
+  dmPrincipal := TdmPrincipal.Create(nil);
+  qry         := TFDQuery.Create(nil);
+  try
+    qry := TFDQuery.Create(nil);
+    qry.Connection := dmPrincipal.cnnConexao;
+    with qry do
+      Begin
+        Close;
+        SQL.Clear;
+        SQL.Add('select * from tab_veiculos');
+
+        if Req.Params['placa'] <> 'all' then  // qdo é usado o parâmetro "all" select fica filtro.
+          Begin
+            SQL.Add('where placa = :placa');
+            Params.ParamByName('placa').AsString  := Req.Params['placa'];
+          End;
+
+        Open;
+      End;
+
+    Result := qry;
+  finally
+    qry.free;
+    dmPrincipal.free;
+  end;
+End;
+
+end.

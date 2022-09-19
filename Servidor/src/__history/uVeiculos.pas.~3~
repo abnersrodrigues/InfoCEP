@@ -1,0 +1,75 @@
+unit uVeiculos;
+
+interface
+
+uses
+  REST.Json.Types, FireDAC.Comp.Client, Data.DB, System.DateUtils,
+  System.SysUtils, System.Classes, Datasnap.DBClient,
+  Data.DBXInterBase, Data.SqlExpr, Data.FMTBcd, Datasnap.Provider,
+  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf,
+  FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
+  FireDAC.Phys, FireDAC.Phys.MSSQL, FireDAC.Phys.MSSQLDef, FireDAC.VCLUI.Wait,
+  FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
+  FireDAC.Comp.DataSet, FireDAC.Comp.UI, StdCtrls, windows,
+  FireDAC.Phys.MySQL, FireDAC.Phys.MySQLDef, Clipbrd
+  ;
+
+{$M+}
+
+
+//Funcion
+    function Add(AnoFabricacao, CaixaCambio, CapacidadeCarga, Carroceria,
+      CilindradasCm3, Cmt, Combustivel, Cor, EixoTraseiroDiferencial,
+      MarcaModelo, Municipio, NumeroChassi, NumeroMotor, Pbt, Placa,
+      PotenciaCavalos, Procedencia, QuantidadeEixos, QuantidadePassageiros,
+      SituacaoChassi, TipoCarroceria, TipoMontagem, TipoVeiculo,
+      Uf: String): boolean;
+
+
+
+implementation
+
+Uses udmPrincipal, ufrmPrincipal;
+
+function Add(AnoFabricacao, CaixaCambio, CapacidadeCarga, Carroceria,
+  CilindradasCm3, Cmt, Combustivel, Cor, EixoTraseiroDiferencial,
+  MarcaModelo, Municipio, NumeroChassi, NumeroMotor, Pbt, Placa,
+  PotenciaCavalos, Procedencia, QuantidadeEixos, QuantidadePassageiros,
+  SituacaoChassi, TipoCarroceria, TipoMontagem, TipoVeiculo,
+  Uf: String): boolean;
+Var
+  post : TFDQuery;
+Begin
+  try
+    post := TFDQuery.Create(nil);
+    post.Connection := dmPrincipal.CONEXAO;
+
+    with post do
+      Begin
+        Close;
+        SQL.Clear;
+        SQL.Add('insert into tab_veiculos');
+        SQL.Add('(AnoFabricacao, NumeroChassi, Combustivel, Placa, QuantidadePassageiros, Uf)');
+        SQL.Add('values');
+        SQL.Add('(:AnoFabricacao, :NumeroChassi, :Combustivel, :Placa, :QuantidadePassageiros, :Uf)');
+
+        Params.ParamByName('AnoFabricacao').value := AnoFabricacao;
+        Params.ParamByName('Combustivel').value := Combustivel;
+        Params.ParamByName('NumeroChassi').value := NumeroChassi;
+        Params.ParamByName('Placa').value := Placa;
+        Params.ParamByName('QuantidadePassageiros').value := QuantidadePassageiros;
+        Params.ParamByName('Uf').value := Uf;
+
+        ExecSQL;
+
+        Result := true;
+
+      End;
+    post.Free;
+  Except
+    Result := false;
+    post.Free;
+  end;
+End;
+
+end.

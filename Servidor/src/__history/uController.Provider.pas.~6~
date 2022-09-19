@@ -1,0 +1,47 @@
+unit uController.Provider;
+
+interface
+
+Uses
+  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections
+
+  //Uses Aplicação
+  , uController.Rotas, uModel.Principal, uConst
+
+  // Componentes
+  , Horse, Horse.Jhonson, Horse.Compression, Horse.HandleException, Horse.BasicAuthentication
+  , Horse.Query, DataSet.Serialize, Horse.Logger, Horse.Logger.Provider.Console
+
+  ;
+
+type
+  TControllerProvider = class
+  private
+
+  Public
+    class procedure Inicializar; static;
+  End;
+
+implementation
+
+
+class procedure TControllerProvider.Inicializar;
+Begin
+  dmPrincipal := TdmPrincipal.Create(nil);
+
+  THorse
+    .Use(Compression())
+    .Use(Jhonson)
+    .Use(Query)
+    .Use(HorseBasicAuthentication(
+     function(const AUsername, APassword: string): Boolean
+     begin
+       Result := AUsername.Equals(APILOGIN) and APassword.Equals(APIPASSWORD);
+     end));
+
+  TControllerRotas.Registry;
+
+  THorse.Listen(9009);
+End;
+
+end.

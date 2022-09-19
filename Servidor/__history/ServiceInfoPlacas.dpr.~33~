@@ -1,0 +1,33 @@
+program ServiceInfoPlacas;
+
+uses
+  SvcMgr,
+  forms,
+  uConst in 'src\uConst.pas',
+  uController.APIWhatsApp in 'src\uController.APIWhatsApp.pas',
+  uController.APIExterna in 'src\uController.APIExterna.pas',
+  uController.APIApontaHora in 'src\uController.APIApontaHora.pas',
+  uController.Compare in 'src\uController.Compare.pas',
+  uController.Rotas in 'src\uController.Rotas.pas',
+  uController.Provider in 'src\uController.Provider.pas',
+  uModel.Principal in 'src\uModel.Principal.pas' {dmPrincipal: TDataModule},
+  uView.Principal in 'src\uView.Principal.pas' {frmPrincipal},
+  uView.InfoPlacas in 'src\uView.InfoPlacas.pas' {InfoPlacas: TService};
+
+{$R *.RES}
+
+begin
+  if DebugHook <> 0 then
+  begin
+    Forms.Application.Initialize;
+    Forms.Application.CreateForm(TfrmPrincipal, frmPrincipal);
+  Forms.Application.Run;
+  end
+  else
+  begin
+    if not SvcMgr.Application.DelayInitialize or SvcMgr.Application.Installing then
+      SvcMgr.Application.Initialize;
+    SvcMgr.Application.CreateForm(TInfoPlacas, InfoPlacas);
+    SvcMgr.Application.Run;
+  end;
+end.

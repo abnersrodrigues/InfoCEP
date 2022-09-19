@@ -1,0 +1,57 @@
+unit uController.APIWhatsApp;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections,
+  uModel.Principal, DataSet.Serialize;
+
+type
+  TControllerAPIWhatsApp = class
+  private
+
+  public
+    class function JsonWhatsApp(origem: string): TJSONObject; static;
+
+  end;
+
+implementation
+
+class function TControllerAPIWhatsApp.JsonWhatsApp(origem: string): TJSONObject;
+Begin
+  dmPrincipal.tem_resp_whatsapp.open;
+  with dmPrincipal.tem_resp_whatsapp do
+    begin
+      Append;
+        FieldByName('placa').Value              := dmPrincipal.temp_extraplaca.Value;
+        FieldByName('marca').Value              := dmPrincipal.temp_principalMARCA.Value;
+        FieldByName('modelo').Value             := dmPrincipal.temp_principalMODELO.Value;
+        FieldByName('cor').Value                := dmPrincipal.temp_principalcor.Value;
+        FieldByName('tipo_veiculo').Value       := dmPrincipal.temp_extratipo_veiculo.Value;
+        FieldByName('especie').Value            := dmPrincipal.temp_extraespecie.Value;
+        FieldByName('chassi').Value             := dmPrincipal.temp_extrachassi.Value;
+        FieldByName('caixa_de_cambio').Value    := dmPrincipal.temp_extracaixa_cambio.Value;
+        FieldByName('cap_maxima_tracao').Value  := dmPrincipal.temp_extracap_maxima_tracao.Value;
+        FieldByName('motor').Value              := dmPrincipal.temp_extramotor.Value;
+        FieldByName('linha').Value              := dmPrincipal.temp_extralinha.Value;
+        FieldByName('cilindradas').Value        := dmPrincipal.temp_extracilindradas.Value;
+        FieldByName('eixos').Value              := dmPrincipal.temp_extraeixos.Value;
+        FieldByName('combustivel').Value        := dmPrincipal.temp_extracombustivel.Value;
+        FieldByName('nacionalidade').Value      := dmPrincipal.temp_extranacionalidade.Value;
+        FieldByName('ano_modelo').Value         := dmPrincipal.temp_extraano_modelo.Value;
+        FieldByName('ano_fabricacao').Value     := dmPrincipal.temp_extraano_fabricacao.Value;
+        FieldByName('data_hora_consulta').Value := Now();
+
+        case origem.ToInteger() of
+          1: FieldByName('grv_pesquisa').Value       := 'APIOficial';
+          2: FieldByName('grv_pesquisa').Value       := 'APIStandBy';
+          3: FieldByName('grv_pesquisa').Value       := 'BDLocal';
+        end;
+
+      Post;
+    end;
+  Result := dmPrincipal.tem_resp_whatsapp.ToJSONObject();
+End;
+
+
+end.

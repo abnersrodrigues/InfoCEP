@@ -1,0 +1,38 @@
+unit uController.Rotas;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections
+
+  // Componentes
+  , Horse, Horse.Jhonson, Horse.Compression, Horse.HandleException, Horse.BasicAuthentication
+  , DataSet.Serialize, RESTRequest4D;
+
+type
+  TControllerRotas = class
+
+    private
+
+    public
+
+      class procedure Registry;
+
+  end;
+
+implementation
+
+uses
+  uController.Gets;
+
+{ TControllerRotas }
+
+
+{$region 'Rota API'}
+class procedure TControllerRotas.Registry;
+begin
+  THorse.Get('/get/date', TControllerGets.GetDate);
+end;
+{$endregion}
+
+end.

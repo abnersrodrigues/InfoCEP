@@ -1,0 +1,526 @@
+unit uControllerRotas;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections
+
+  //Uses Aplicação
+  , uDataModule
+
+  // Componentes
+  , Horse, Horse.Jhonson, Horse.Compression, Horse.HandleException, Horse.BasicAuthentication
+  , DataSet.Serialize, Horse.Query, RESTRequest4D, Horse.Logger, Horse.Logger.Provider.Console
+  , Horse.Paginate
+
+  //uses para Firedac
+  , FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
+  FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
+  FireDAC.Phys, FireDAC.VCLUI.Wait, FireDAC.Phys.PGDef, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
+  FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client, FireDAC.Phys.PG,
+  FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs
+
+  ;
+
+type
+  TControllerRotas = class
+  private
+
+  public
+
+    class procedure Registry;
+
+    class procedure Get(Req: THorseRequest; Res: THorseResponse; Next: TProc); static;
+    class procedure GetAll(Req: THorseRequest; Res: THorseResponse; Next: TProc); static;
+    class function ApiOficial: Boolean; static;
+    class function ApiStandyBy: Boolean; static;
+
+    class function JsonWhatsApp(origem: string): TJSONObject;
+    class function JsonApontaHora(origem: string): TJSONObject; static;
+
+  end;
+
+implementation
+
+Var
+  sPlaca        : String;
+  dmPrincipal   : TdmPrincipal;
+
+  xDupl         : String;
+{ TControllerRotas }
+
+
+{$region 'Pesquisa na tabela de Api Externa vs Gravar no banco'}
+class procedure TControllerRotas.Get(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+Var
+    qry             : TFDQuery;
+    qryExtra        : TFDQuery;
+
+    Resp            : IResponse;
+
+    json            : String;
+    jsonObj         : TJSONObject;
+    jsonObjExtra    : TJSONObject;
+    jsonObjFipe     : TJSONObject;
+    jsonArrayDados  : TJSONArray;
+begin
+  sPlaca  := UpperCase(StringReplace(trim(Req.Params['placa']), '-', '', [rfReplaceAll])); // tratando a Placa
+
+  dmPrincipal := TdmPrincipal.Create(nil);
+  try
+    qry := TFDQuery.Create(nil);
+    qry.Connection := dmPrincipal.cnnConexao;
+    with qry do
+      Begin
+        Close;
+        SQL.Clear;
+        SQL.Add('select * from tab_placas');
+        SQL.Add('where placa like :placa');
+          Params.ParamByName('placa').AsString  := '%' + sPlaca + '%';
+        Open;
+
+        if qry.recordcount = 0 then // ja existe base local?
+{$region 'Nova Pesquisa'}
+          Begin
+            if Length(sPlaca) <> 7 then    //tratando se a placa vem com qtde de caracter a mais
+              Begin
+                jsonObj := TJSONObject.Create;
+                jsonObj.AddPair('Erro','Erro na consulta: Verifique a placa!');
+                Res.Send(jsonObj).Status(THTTPStatus.NotAcceptable);
+                Exit;
+              End;
+
+            try
+              if not ApiOficial then // ApiOficial -- sempre sera verificado nesta primeiro devido ao maior numero de req dia
+                Begin
+                  try
+                    // se der erro na Oficial vai tentar na StandBy
+                    ApiStandyBy; // ApiStandBy
+                    dmPrincipal.AddPlaca;
+                    Res.Send(JsonWhatsApp('2')); // Respondendo a Requisição
+                    dmPrincipal.Log('Sucess: '+ sPlaca +' inserido no banco');
+                  Except
+                    jsonObj := TJSONObject.Create;
+                    jsonObj.AddPair('Erro','Erro na consulta: Verifique a placa, e tente novamente!');
+                    Res.Send(jsonObj).Status(THTTPStatus.NotAcceptable);
+                    Exit;
+                  end;
+
+                  dmPrincipal.Log('Sucess: '+ sPlaca +' inserido no banco');
+                  Exit;
+                End
+              else
+                Begin
+                  if dmPrincipal.temp_extrachassi.asString = '' then // verificar se field "chassi" esta vazio -- se sim consultar na api secundária;
+                    Begin
+                      try
+                        ApiStandyBy; // ApiStandBy
+                        dmPrincipal.AddPlaca;
+                        Res.Send(JsonWhatsApp('2')); // Respondendo a Requisição
+                        dmPrincipal.Log('Sucess: '+ sPlaca +' inserido no banco');
+                      Except
+                        jsonObj := TJSONObject.Create;
+                        jsonObj.AddPair('Erro','Erro na consulta: Verifique a placa, e tente novamente!');
+                        Res.Send(jsonObj).Status(THTTPStatus.NotAcceptable);
+                        Exit;
+                      end;
+                    End
+                  else
+                    Begin
+                      dmPrincipal.AddPlaca; //Populando banco interno
+                      Res.Send(JsonWhatsApp('1')); // Respondendo a Requisição
+                      dmPrincipal.Log('Sucess: '+ sPlaca +' inserido no banco');
+                    End;
+                End;
+            Except
+              jsonObj := TJSONObject.Create;
+              jsonObj.AddPair('Erro','Erro na consulta: Verifique a placa, e tente novamente!');
+              Res.Send(jsonObj).Status(THTTPStatus.NotAcceptable);
+              Exit;
+            end;
+
+            //Retorno pra requisição
+            //Res.Send(dmPrincipal.temp_extra.ToJSONObject());
+          End
+{$endregion}
+        else
+{$region 'Placa já existente Pesquisa'}
+          Begin
+            dmPrincipal.Log('Wharning: '+ sPlaca +' já está no banco de dados da grv');
+
+            qryExtra                := TFDQuery.Create(nil);
+            qryExtra.Connection     := dmPrincipal.cnnConexao;
+            with qryExtra do
+              Begin
+                Close;
+                SQL.Clear;
+                SQL.Add('SELECT * FROM tab_placas_extra');
+                SQL.Add('WHERE id_placa = :id');
+                  Params.ParamByName('id').asInteger  := qry.FieldByName('id').AsInteger;
+                Open;
+              End;
+
+            jsonObj := qry.ToJSONObject();
+            jsonObjExtra := qryExtra.ToJSONObject();
+
+            dmPrincipal.temp_principal.LoadFromJSON(jsonObj);
+            dmPrincipal.temp_extra.LoadFromJSON(jsonObjExtra);
+
+            Res.Send(JsonWhatsApp('3')); // Respondendo a Requisição
+
+          End;
+{$endregion}
+      End;
+  finally
+    qry.free;
+    qryExtra.free;
+    dmPrincipal.free;
+  end;
+end;
+{$endregion}
+
+class function TControllerRotas.JsonWhatsApp(origem: string): TJSONObject;
+Begin
+  dmPrincipal.tem_resp_whatsapp.open;
+  with dmPrincipal.tem_resp_whatsapp do
+    begin
+      Append;
+        FieldByName('placa').Value              := dmPrincipal.temp_extraplaca.Value;
+        FieldByName('marca').Value              := dmPrincipal.temp_principalMARCA.Value;
+        FieldByName('modelo').Value             := dmPrincipal.temp_principalMODELO.Value;
+        FieldByName('cor').Value                := dmPrincipal.temp_principalcor.Value;
+        FieldByName('tipo_veiculo').Value       := dmPrincipal.temp_extratipo_veiculo.Value;
+        FieldByName('especie').Value            := dmPrincipal.temp_extraespecie.Value;
+        FieldByName('chassi').Value             := dmPrincipal.temp_extrachassi.Value;
+        FieldByName('caixa_de_cambio').Value    := dmPrincipal.temp_extracaixa_cambio.Value;
+        FieldByName('motor').Value              := dmPrincipal.temp_extramotor.Value;
+        FieldByName('cilindradas').Value        := dmPrincipal.temp_extracilindradas.Value;
+        FieldByName('eixos').Value              := dmPrincipal.temp_extraeixos.Value;
+        FieldByName('combustivel').Value        := dmPrincipal.temp_extracombustivel.Value;
+        FieldByName('nacionalidade').Value      := dmPrincipal.temp_extranacionalidade.Value;
+        FieldByName('ano_modelo').Value         := dmPrincipal.temp_extraano_modelo.Value;
+        FieldByName('ano_fabricacao').Value     := dmPrincipal.temp_extraano_fabricacao.Value;
+        FieldByName('data_hora_consulta').Value := Now();
+
+        case origem.ToInteger() of
+          1: FieldByName('grv_pesquisa').Value       := 'APIOfial';
+          2: FieldByName('grv_pesquisa').Value       := 'APIStandBy';
+          3: FieldByName('grv_pesquisa').Value       := 'BD Local';
+        end;
+
+
+      Post;
+    end;
+  Result := dmPrincipal.tem_resp_whatsapp.ToJSONObject();
+End;
+
+class function TControllerRotas.JsonApontaHora(origem: string): TJSONObject;
+Begin
+  dmPrincipal.temp_resp_apontahora.open;
+  with dmPrincipal.temp_resp_apontahora do
+    begin
+      Append;
+      FieldByName('municipio').value                    := dmPrincipal.temp_extramunicipio.Value;
+      FieldByName('uf').value                           := dmPrincipal.temp_principaluf.Value;
+      FieldByName('ano_fabricacao').value               := dmPrincipal.temp_extraano_fabricacao.Value+'/'+dmPrincipal.temp_extraano_modelo.Value;
+      FieldByName('cmt').value                          := '';
+      FieldByName('cor').value                          := dmPrincipal.temp_principalcor.Value;
+      FieldByName('pbt').value                          := dmPrincipal.temp_extrapeso_bruto_total.Value;
+      FieldByName('placa').value                        := dmPrincipal.temp_principalplaca.Value;
+      FieldByName('numero_chassi').value                := dmPrincipal.temp_extrachassi.Value;
+      FieldByName('numero_motor').value                 := dmPrincipal.temp_extramotor.Value;
+      FieldByName('potencia_cavalos').value             := '';
+      FieldByName('carroceria').value                   := dmPrincipal.temp_extracarroceria.Value;
+      FieldByName('cilindradas_cm3').value              := dmPrincipal.temp_extracilindradas.Value;
+      FieldByName('combustivel').value                  := dmPrincipal.temp_extracombustivel.Value;
+      FieldByName('procedencia').value                  := dmPrincipal.temp_extranacionalidade.Value;
+      FieldByName('caixa_cambio').value                 := dmPrincipal.temp_extracaixa_cambio.Value;
+      FieldByName('tipo_montagem').value                := dmPrincipal.temp_extratipo_montagem.Value;
+      FieldByName('tipo_carroceria').value              := dmPrincipal.temp_extratipo_carroceria.Value;
+      FieldByName('tipo_veiculo').value                 := dmPrincipal.temp_extratipo_veiculo.Value;
+      FieldByName('eixo_traseiro_diferencial').value    := dmPrincipal.temp_extraeixo_traseiro_dif.Value;
+      FieldByName('situacao_chassi').value              := dmPrincipal.temp_extrasituacao_chassi.Value;
+      FieldByName('capacidade_carga').value             := dmPrincipal.temp_extrapeso_bruto_total.Value;
+      FieldByName('quantidade_eixos').value             := dmPrincipal.temp_extraeixos.Value;
+      FieldByName('quantidade_passageiros').value       := dmPrincipal.temp_extraquantidade_passageiro.Value;
+      FieldByName('marca_modelo').value                 := dmPrincipal.temp_principalMODELO.Value;
+
+        case origem.ToInteger() of
+          1: FieldByName('grv_pesquisa').Value       := 'APIOfial';
+          2: FieldByName('grv_pesquisa').Value       := 'APIStandBy';
+          3: FieldByName('grv_pesquisa').Value       := 'BD Local';
+        end;
+
+
+      Post;
+    end;
+  Result := dmPrincipal.temp_resp_apontahora.ToJSONObject();
+End;
+
+
+{$region 'Tratando Arquivos da APIOficial'}
+class function TControllerRotas.ApiOficial: Boolean;
+Var
+    qry             : TFDQuery;
+    qryExtra        : TFDQuery;
+
+    Resp            : IResponse;
+
+    json            : String;
+    Erro            : String; // Erro de retornos
+
+    jsonObj         : TJSONObject;
+
+    jsonObjExtra    : TJSONObject;
+    jsonObjFipe     : TJSONObject;
+    jsonArrayDados  : TJSONArray;
+Begin
+  try
+    try
+      //Buscando na api externa (OFICIAL)
+      Resp := TRequest.New.BaseURL('https://wdapi.com.br/placas/'+ sPlaca +'/c31b07f4745add97a70330a9680cb18c')
+        .Get;
+      json := Resp.Content;
+    Except
+      Result := false;
+      dmPrincipal.Log('Erro: '+ sPlaca + ' erro na busca');
+        jsonObj := TJSONObject.Create;
+        jsonObj.AddPair('Erro','falha na consulta externa. Tente novamente!');
+        //Res.Send(jsonObj).Status(THTTPStatus.NotAcceptable);
+        Exit;
+    end;
+
+    if Resp.StatusCode <> 200 then
+      Begin
+        Result := false;
+        dmPrincipal.Log('Erro: '+ sPlaca +' não consultado');
+
+        jsonObj := TJSONObject.Create;
+        jsonObj.AddPair('Erro','Erro na consulta. Placa não encontrada, tente novamente!');
+        //Res.Send(jsonObj).Status(THTTPStatus.NotAcceptable);
+        Exit;
+      End;
+
+
+    //Tratando Retorno da API
+    jsonObj         := TJSONObject.ParseJSONValue(TEncoding.UTF8.GetBytes(json), 0) as TJSONObject;
+
+    dmPrincipal.temp_principal.Open;   //Extraindo informações Objeto principal
+    with dmPrincipal.temp_principal do
+      Begin
+        Append;
+          FieldByName('MARCA').Value              := jsonObj.GetValue('MARCA').Value;
+          FieldByName('MODELO').Value             := jsonObj.GetValue('MODELO').Value;
+          FieldByName('SUBMODELO').Value          := jsonObj.GetValue('SUBMODELO').Value;
+          FieldByName('cor').Value                := jsonObj.GetValue('cor').Value;
+          FieldByName('data').Value               := jsonObj.GetValue('data').Value;
+          FieldByName('logo').Value               := jsonObj.GetValue('logo').Value;
+          FieldByName('placa').Value              := jsonObj.GetValue('placa').Value;
+          FieldByName('placa_alternativa').Value  := jsonObj.GetValue('placa_alternativa').Value;
+          FieldByName('token').Value              := jsonObj.GetValue('token').Value;
+          FieldByName('uf').Value                 := jsonObj.GetValue('uf').Value;
+        Post;
+      End;
+
+
+    try
+      jsonObjExtra    := jsonObj.GetValue('extra') as TJSONObject; //Extraindo EXTRA
+    Except
+      Result := false;
+      dmPrincipal.Log('Falha: ao converter jsonObjExtra ' + sPlaca);
+      exit;
+    end;
+
+    try
+      jsonObjFipe     := jsonObj.GetValue('fipe') as TJSONObject; //Extraindo FIPE
+      jsonArrayDados  := jsonObjFipe.GetValue('dados') as TJSONArray;
+    finally
+      dmPrincipal.Log('Falha: ao converter jsonObjFipe e/ou jsonArrayDados ' + sPlaca);
+    end;
+
+    try
+      dmPrincipal.temp_extra.LoadFromJSON(jsonObjExtra);
+    Except
+      Result := false;
+      dmPrincipal.Log('Erro: '+ sPlaca +' falha ao lancar tabela extra');
+      exit;
+    end;
+
+    try
+      dmPrincipal.temp_dados.LoadFromJSON(jsonArrayDados);
+    Except
+      Result := false;
+      dmPrincipal.Log('Erro: '+ sPlaca +' falha ao lancar tabela dados');
+      exit;
+    end;
+
+    Result := true;
+  Except
+    Result := false
+  end;
+End;
+{$endregion}
+
+{$region 'Tratando Arquivos da APIStandBy'}
+class function TControllerRotas.ApiStandyBy: Boolean;
+Var
+    qry             : TFDQuery;
+    qryExtra        : TFDQuery;
+
+    RespStandyBy    : IResponse; //StandyBy
+
+    jsonStandBy     : String; //Se acaso precisar
+
+    jsonObj         : TJSONObject;
+    jsonData        : TJSONObject;
+      jsonVeiculos  : TJSONObject;
+    jsonFipes       : TJSONObject;
+Begin
+  try
+    //Buscando na api externa (STANDY BY) https://placas.fipeapi.com.br/placas/rtk3a10?key=3ea19b0dedd72e16db3c64daf1ad7308
+    RespStandyBy := TRequest.New.BaseURL('https://placas.fipeapi.com.br/placas/'+ sPlaca)
+                    .AddParam('key', '3ea19b0dedd72e16db3c64daf1ad7308')
+                    .Get;
+    jsonStandBy := RespStandyBy.Content;
+
+
+    try
+      jsonObj   := TJSONObject.Create;
+      jsonObj   := TJSONObject.ParseJSONValue(TEncoding.UTF8.GetBytes(jsonStandBy), 0) as TJSONObject;
+    Except
+      Result := false;
+      dmPrincipal.Log('Falha: ao converter jsonObj | StandBy ' + sPlaca);
+      exit;
+    end;
+
+    try
+      jsonData  := jsonObj.GetValue('data') as TJSONObject;
+    Except
+      Result := false;
+      dmPrincipal.Log('Falha: ao converter ObjData | StandBy ' + sPlaca);
+      exit;
+    end;
+
+    try
+      jsonVeiculos  := jsonData.GetValue('veiculo') as TJSONObject;
+    Except
+      Result := false;
+      dmPrincipal.Log('Falha: ao converter jsonObjVeiculo  | StandBy ' + sPlaca);
+      exit;
+    end;
+
+    //jsonFipes := jsonObj.GetValue('fipes') as TJSONObject;
+
+    dmPrincipal.temp_principal.Close;
+    dmPrincipal.temp_principal.Open;   //Extraindo informações Objeto principal
+    with dmPrincipal.temp_principal do
+      Begin
+        Append;
+          FieldByName('MARCA').Value              := jsonVeiculos.GetValue('marca_modelo').Value;
+          FieldByName('MODELO').Value             := jsonVeiculos.GetValue('marca_modelo').Value;
+          FieldByName('SUBMODELO').Value          := jsonVeiculos.GetValue('marca_modelo').Value;
+          FieldByName('cor').Value                := jsonVeiculos.GetValue('cor').Value;
+          FieldByName('data').Value               := now();
+          FieldByName('logo').Value               := '';
+          FieldByName('placa').Value              := jsonVeiculos.GetValue('placa').Value;
+          FieldByName('placa_alternativa').Value  := '';
+          FieldByName('token').Value              := '';
+          FieldByName('uf').Value                 := jsonVeiculos.GetValue('uf').Value;
+        Post;
+      End;
+
+    dmPrincipal.temp_extra.Close;
+    dmPrincipal.temp_extra.Open;
+    with dmPrincipal.temp_extra do
+      Begin
+        Append;
+          FieldByName('nacionalidade').Value        := jsonVeiculos.GetValue('procedencia').Value;
+          FieldByName('municipio').Value            := jsonVeiculos.GetValue('municipio').Value;
+          FieldByName('uf').Value                   := jsonVeiculos.GetValue('uf').Value;
+          FieldByName('chassi').Value               := jsonVeiculos.GetValue('chassi').Value;
+          FieldByName('situacao_chassi').Value      := jsonVeiculos.GetValue('situacao_do_chassi').Value;
+          FieldByName('modelo').Value               := jsonVeiculos.GetValue('marca_modelo').Value;
+          FieldByName('ano_fabricacao').Value       := Copy(jsonVeiculos.GetValue('ano').Value,1,4);
+          FieldByName('ano_modelo').Value           := Copy(jsonVeiculos.GetValue('ano').Value,6,4);
+          FieldByName('peso_bruto_total').Value     := jsonVeiculos.GetValue('capacidade_de_carga').Value;
+          FieldByName('combustivel').Value          := jsonVeiculos.GetValue('combustivel').Value;
+          FieldByName('cilindradas').Value          := jsonVeiculos.GetValue('cilindradas').Value;
+          FieldByName('quantidade_passageiro').Value:= jsonVeiculos.GetValue('quantidade_passageiro').Value;
+          FieldByName('tipo_montagem').Value        := jsonVeiculos.GetValue('tipo_montagem').Value;
+          FieldByName('eixos').Value                := jsonVeiculos.GetValue('quantidade_de_eixos').Value;
+          FieldByName('tipo_veiculo').Value         := jsonVeiculos.GetValue('tipo_de_veiculo').Value;
+          FieldByName('tipo_carroceria').Value      := jsonVeiculos.GetValue('tipo_carroceria').Value;
+          FieldByName('motor').Value                := jsonVeiculos.GetValue('n_motor').Value;
+          FieldByName('caixa_cambio').Value         := jsonVeiculos.GetValue('caixa_cambio').Value;
+          FieldByName('eixo_traseiro_dif').Value    := jsonVeiculos.GetValue('eixo_traseiro_dif').Value;
+          FieldByName('carroceria').Value           := jsonVeiculos.GetValue('carroceria').Value;
+        Post;
+      End;
+
+    Result := true;
+  Except
+    Result := false;
+    dmPrincipal.Log('Erro: '+ sPlaca + ' erro na busca');
+    Exit;
+  end;
+End;
+{$endregion}
+
+{$region 'Pesquisa na tabela de Api antiga -- Convertida --'}
+class procedure TControllerRotas.GetAll(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+Var
+    qry             : TFDQuery;
+    Resp            : IResponse;
+
+    sInicio, sFim   : String;
+
+begin
+  sInicio           := Req.Params['sInicio'];
+  sFim              := Req.Params['sFim'];
+
+  try
+    qry := TFDQuery.Create(nil);
+    qry.Connection := dmPrincipal.cnnConexao;
+    with qry do
+      Begin
+        if sInicio.ToInteger = -2 then
+          Begin
+            Close;
+            SQL.Clear;
+            SQL.Add('select * from tab_veiculos');
+            SQL.Add('WHERE placa like :placa');
+            SQL.Add('order by 1 asc');
+              Params.ParamByName('placa').asString  := '%' + sFim + '%'; //por placa
+            Open;
+
+            Res.Send(qry.ToJsonArray);
+          End
+        else
+          Begin
+            Close;
+            SQL.Clear;
+            SQL.Add('select * from tab_veiculos');
+            SQL.Add('WHERE id > :sInicio AND id <= :sFim');
+            SQL.Add('order by 1 asc');
+              Params.ParamByName('sInicio').AsInteger   := sInicio.ToInteger; //parametro inicial
+              Params.ParamByName('sFim').AsInteger      := sFim.ToInteger; //parametro final
+            Open;
+
+            Res.Send(qry.ToJsonArray);
+          End;
+      End;
+  finally
+    qry.free;
+  end;
+end;
+{$endregion}
+
+{$region 'Rota API'}
+class procedure TControllerRotas.Registry;
+begin
+  THorse.Get('/get/:placa', Get);
+  THorse.Get('/get/all/:sInicio/:sFim', GetAll);
+end;
+{$endregion}
+
+end.

@@ -1,0 +1,87 @@
+unit uInfoPlacas;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.SvcMgr,
+  Vcl.Dialogs, System.JSON
+
+  //Uses Aplicação
+  , uControllerRotas, uDataModule
+
+  // Componentes
+  , Horse, Horse.Jhonson, Horse.Compression, Horse.HandleException, Horse.BasicAuthentication
+  , Horse.Query, DataSet.Serialize, Horse.Logger, Horse.Logger.Provider.Console
+
+
+  ;
+
+type
+  TInfoPlacas = class(TService)
+    procedure ServiceDestroy(Sender: TObject);
+    procedure ServiceCreate(Sender: TObject);
+    procedure ServiceStart(Sender: TService; var Started: Boolean);
+    procedure ServiceStop(Sender: TService; var Stopped: Boolean);
+  private
+    { Private declarations }
+  public
+    dmPrincipal : TdmPrincipal;
+
+    function GetServiceController: TServiceController; override;
+    { Public declarations }
+  end;
+
+var
+  InfoPlacas: TInfoPlacas;
+
+implementation
+
+{$R *.dfm}
+
+procedure ServiceController(CtrlCode: DWord); stdcall;
+begin
+  InfoPlacas.Controller(CtrlCode);
+end;
+
+procedure TInfoPlacas.ServiceDestroy(Sender: TObject);
+begin
+  dmPrincipal.free;
+end;
+
+procedure TInfoPlacas.ServiceCreate(Sender: TObject);
+begin
+  dmPrincipal := TdmPrincipal.Create(Self);
+
+  THorse
+    .Use(Compression())
+    .Use(Jhonson)
+    .Use(HandleException)
+    .Use(Query)
+    .Use(THorseLogger.New())
+    .Use(HorseBasicAuthentication(
+     function(const AUsername, APassword: string): Boolean
+     begin
+       Result := AUsername.Equals('grv') and APassword.Equals('grv');
+     end));
+
+  TControllerRotas.Registry;
+end;
+
+function TInfoPlacas.GetServiceController: TServiceController;
+begin
+  Result := ServiceController;
+end;
+
+procedure TInfoPlacas.ServiceStart(Sender: TService; var Started: Boolean);
+begin
+  THorse.Listen(9009);
+  Started := True;
+end;
+
+procedure TInfoPlacas.ServiceStop(Sender: TService; var Stopped: Boolean);
+begin
+  THorse.StopListen;
+  Stopped := True;
+end;
+
+end.

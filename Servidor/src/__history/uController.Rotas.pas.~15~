@@ -1,0 +1,62 @@
+unit uController.Rotas;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections
+
+  //Uses Aplicação
+  , uModel.Principal, uController.APIWhatsApp
+
+  // Componentes
+  , Horse, Horse.Jhonson, Horse.Compression, Horse.HandleException, Horse.BasicAuthentication
+  , DataSet.Serialize, Horse.Query, RESTRequest4D, Horse.Logger, Horse.Logger.Provider.Console
+  , Horse.Paginate, Horse.Commons
+
+  //uses para Firedac
+  , FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
+  FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
+  FireDAC.Phys, FireDAC.VCLUI.Wait, FireDAC.Phys.PGDef, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
+  FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client, FireDAC.Phys.PG,
+  FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs
+
+  ;
+
+type
+  TControllerRotas = class
+  private
+
+
+  public
+
+    class procedure Registry;
+
+    class procedure Get(Req: THorseRequest; Res: THorseResponse; Next: TProc); static;
+
+  end;
+
+implementation
+
+Var
+  sPlaca        : String;
+  sOrigem       : String;
+{ TControllerRotas }
+
+
+{$region 'Pesquisa nas Api's Externas vs Gravar no banco'}
+class procedure TControllerRotas.Get(Req: THorseRequest;
+                                     Res: THorseResponse;
+                                     Next: TProc);
+begin
+  //
+end;
+{$endregion}
+
+{$region 'Rota API'}
+class procedure TControllerRotas.Registry;
+begin
+  THorse.Get('/get/:placa', Get);
+end;
+{$endregion}
+
+end.

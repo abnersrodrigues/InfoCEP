@@ -1,0 +1,19 @@
+unit uControllerProvider;
+
+Uses
+
+  //Uses Aplicação
+  uControllerRotas, uDataModule
+
+  // Componentes
+  , Horse, Horse.Jhonson, Horse.Compression, Horse.HandleException, Horse.BasicAuthentication
+  , Horse.Query, DataSet.Serialize, Horse.Logger, Horse.Logger.Provider.Console
+
+
+  ;
+
+interface
+
+implementation
+
+end.

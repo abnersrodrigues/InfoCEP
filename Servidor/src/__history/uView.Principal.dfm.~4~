@@ -1,0 +1,61 @@
+object frmPrincipal: TfrmPrincipal
+  Left = 0
+  Top = 0
+  BorderStyle = bsNone
+  Caption = 'frmPrincipal'
+  ClientHeight = 349
+  ClientWidth = 238
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = poDesktopCenter
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  PixelsPerInch = 96
+  TextHeight = 13
+  object pnl_principal: TPanel
+    Left = 0
+    Top = 0
+    Width = 238
+    Height = 349
+    Align = alClient
+    BevelOuter = bvNone
+    Color = clWhite
+    ParentBackground = False
+    TabOrder = 0
+    object btn_comparar: TSpeedButton
+      Left = 0
+      Top = 0
+      Width = 238
+      Height = 50
+      Align = alTop
+      Caption = 'Comparar Placas'
+      OnClick = btn_compararClick
+      ExplicitWidth = 222
+    end
+    object btn_sair: TSpeedButton
+      Left = 0
+      Top = 299
+      Width = 238
+      Height = 50
+      Align = alBottom
+      Caption = 'SAIR'
+      OnClick = btn_sairClick
+      ExplicitTop = 288
+      ExplicitWidth = 222
+    end
+    object btn_gerar_ini: TSpeedButton
+      Left = 0
+      Top = 50
+      Width = 238
+      Height = 50
+      Align = alTop
+      Caption = 'GERA INI'
+      OnClick = btn_gerar_iniClick
+    end
+  end
+end

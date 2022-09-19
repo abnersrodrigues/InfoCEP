@@ -1,0 +1,99 @@
+unit uController.Gets;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections
+
+  // Componentes
+  , Horse, Horse.Jhonson, Horse.Compression, Horse.HandleException, Horse.BasicAuthentication
+  , DataSet.Serialize, Horse.Query, RESTRequest4D, Horse.Logger, Horse.Logger.Provider.Console
+  , Horse.Paginate, Horse.Commons;
+
+type
+  TControllerGets = class
+  private
+
+  public
+
+    class procedure GetDate(Req: THorseRequest; Res: THorseResponse; Next: TProc); static;
+    class procedure GetAPIExterna(Req: THorseRequest; Res: THorseResponse; Next: TProc); static;
+    class procedure GetAll(Req: THorseRequest; Res: THorseResponse; Next: TProc); static;
+
+  end;
+
+implementation
+
+uses
+  uModel.Querys;
+
+{$region 'Pesquisa Data Time'}
+class procedure TControllerGets.GetDate( Req: THorseRequest;
+                                         Res: THorseResponse;
+                                         Next: TProc);
+begin
+  Res.Send(FormatDateTime('dd/mm/yyyy hh:ss', Now));
+end;
+{$endregion}
+
+{$region 'Pesquisa nas Api's Externas vs Gravar no banco'}
+class procedure TControllerGets.GetAPIExterna( Req: THorseRequest;
+                                         Res: THorseResponse;
+                                         Next: TProc);
+Var
+  restCEP       : IResponse;
+  sString, json : String;
+  jsonObj       : TJSONObject;
+begin
+
+  sString := Req.Params['cep'];
+  sString := StringReplace(trim(sString), '-', '', [rfReplaceAll]); //tirando possível traço
+  sString := StringReplace(trim(sString), '.', '', [rfReplaceAll]); //tirando possivel hífem
+
+  //QryGetCEP(sString, sRec);
+
+  if TModelQuerys.New(nil).QryGetCEP(sString).DataSet.RecordCount > 0 then
+    Begin
+      Res.Send(TModelQuerys.New(nil).QryGetCEP(sString).DataSet.ToJSONObject());
+    End
+  else
+    Begin
+      restCEP := TRequest.New.BaseURL('https://cep.awesomeapi.com.br/json/'+sString)
+        .Accept('application/json')
+        .Get;
+
+      if restCEP.StatusCode = 200 then
+        Begin
+          json    := restCEP.Content;
+          jsonObj := TJSONObject.ParseJSONValue(TEncoding.UTF8.GetBytes(json), 0) as TJSONObject;
+
+          TModelQuerys.New(nil).QryPost(jsonObj);
+
+          Res.Send(TModelQuerys.New(nil).QryGetCEP(sString).DataSet.ToString).Status(THTTPStatus.OK);
+        End
+      else
+      if restCEP.StatusCode = 400 then
+        Begin
+          Res.Send('CEP Inválido').Status(THTTPStatus.BadRequest);
+        End
+      else
+      if restCEP.StatusCode = 404 then
+        Begin
+          Res.Send('CEP Não Encontrado').Status(THTTPStatus.NotFound);
+        End;
+    End;
+
+end;
+{$endregion}
+
+{$region 'Pesquisa All'}
+class procedure TControllerGets.GetAll( Req: THorseRequest;
+                                        Res: THorseResponse;
+                                        Next: TProc);
+begin
+  Res.Send(TModelQuerys.New(nil).QryGetAll.DataSet.ToJSONObject());
+end;
+{$endregion}
+
+
+end.

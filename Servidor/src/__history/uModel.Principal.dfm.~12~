@@ -1,0 +1,475 @@
+object dmPrincipal: TdmPrincipal
+  OldCreateOrder = False
+  Height = 608
+  Width = 264
+  object cnnConexao: TFDConnection
+    Params.Strings = (
+      'Database=grv'
+      'User_Name=postgres'
+      'Password=grv'
+      'DriverID=PG')
+    LoginPrompt = False
+    Left = 48
+    Top = 16
+  end
+  object FDPhysPgDriverLink: TFDPhysPgDriverLink
+    VendorLib = 'C:\Users\GRV\Desktop\InfoPlacas\Servidor\dll\libpq.dll'
+    Left = 184
+    Top = 448
+  end
+  object FDGUIxWaitCursor: TFDGUIxWaitCursor
+    Provider = 'Forms'
+    Left = 184
+    Top = 512
+  end
+  object temp_extra: TFDMemTable
+    FieldDefs = <>
+    IndexDefs = <>
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvPersistent, rvSilentMode]
+    ResourceOptions.Persistent = True
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    StoreDefs = True
+    Left = 48
+    Top = 264
+    object temp_extraano_fabricacao: TStringField
+      FieldName = 'ano_fabricacao'
+      Size = 100
+    end
+    object temp_extraano_modelo: TStringField
+      FieldName = 'ano_modelo'
+      Size = 100
+    end
+    object temp_extracaixa_cambio: TStringField
+      FieldName = 'caixa_cambio'
+      Size = 100
+    end
+    object temp_extracap_maxima_tracao: TStringField
+      FieldName = 'cap_maxima_tracao'
+      Size = 100
+    end
+    object temp_extracarroceria: TStringField
+      FieldName = 'carroceria'
+      Size = 100
+    end
+    object temp_extrachassi: TStringField
+      FieldName = 'chassi'
+      Size = 100
+    end
+    object temp_extracilindradas: TStringField
+      FieldName = 'cilindradas'
+      Size = 100
+    end
+    object temp_extracombustivel: TStringField
+      FieldName = 'combustivel'
+      Size = 100
+    end
+    object temp_extradi: TStringField
+      FieldName = 'di'
+      Size = 100
+    end
+    object temp_extraeixo_traseiro_dif: TStringField
+      FieldName = 'eixo_traseiro_dif'
+      Size = 100
+    end
+    object temp_extraeixos: TStringField
+      FieldName = 'eixos'
+      Size = 100
+    end
+    object temp_extraespecie: TStringField
+      FieldName = 'especie'
+      Size = 100
+    end
+    object temp_extrafaturado: TStringField
+      FieldName = 'faturado'
+      Size = 100
+    end
+    object temp_extragrupo: TStringField
+      FieldName = 'grupo'
+      Size = 100
+    end
+    object temp_extralimite_restricao_trib: TStringField
+      FieldName = 'limite_restricao_trib'
+      Size = 100
+    end
+    object temp_extralinha: TStringField
+      FieldName = 'linha'
+      Size = 100
+    end
+    object temp_extramedia_preco: TStringField
+      FieldName = 'media_preco'
+      Size = 100
+    end
+    object temp_extramodelo: TStringField
+      FieldName = 'modelo'
+      Size = 100
+    end
+    object temp_extramotor: TStringField
+      FieldName = 'motor'
+      Size = 100
+    end
+    object temp_extramunicipio: TStringField
+      FieldName = 'municipio'
+      Size = 100
+    end
+    object temp_extranacionalidade: TStringField
+      FieldName = 'nacionalidade'
+      Size = 100
+    end
+    object temp_extrapeso_bruto_total: TStringField
+      FieldName = 'peso_bruto_total'
+      Size = 100
+    end
+    object temp_extraplaca: TStringField
+      FieldName = 'placa'
+      Size = 100
+    end
+    object temp_extraplaca_modelo_antigo: TStringField
+      FieldName = 'placa_modelo_antigo'
+      Size = 100
+    end
+    object temp_extraplaca_modelo_novo: TStringField
+      FieldName = 'placa_modelo_novo'
+      Size = 100
+    end
+    object temp_extraquantidade_passageiro: TStringField
+      FieldName = 'quantidade_passageiro'
+      Size = 100
+    end
+    object temp_extraregistro_di: TStringField
+      FieldName = 'registro_di'
+      Size = 100
+    end
+    object temp_extrarenavam: TStringField
+      FieldName = 'renavam'
+      Size = 100
+    end
+    object temp_extrarestricao_1: TStringField
+      FieldName = 'restricao_1'
+      Size = 100
+    end
+    object temp_extrarestricao_2: TStringField
+      FieldName = 'restricao_2'
+      Size = 100
+    end
+    object temp_extrarestricao_3: TStringField
+      FieldName = 'restricao_3'
+      Size = 100
+    end
+    object temp_extrarestricao_4: TStringField
+      FieldName = 'restricao_4'
+      Size = 100
+    end
+    object temp_extras_especie: TStringField
+      FieldName = 's_especie'
+      Size = 100
+    end
+    object temp_extrasegmento: TStringField
+      FieldName = 'segmento'
+      Size = 100
+    end
+    object temp_extrasituacao_chassi: TStringField
+      FieldName = 'situacao_chassi'
+      Size = 100
+    end
+    object temp_extrasituacao_veiculo: TStringField
+      FieldName = 'situacao_veiculo'
+      Size = 100
+    end
+    object temp_extrasub_segmento: TStringField
+      FieldName = 'sub_segmento'
+      Size = 100
+    end
+    object temp_extraterceiro_eixo: TStringField
+      FieldName = 'terceiro_eixo'
+      Size = 100
+    end
+    object temp_extratipo_carroceria: TStringField
+      FieldName = 'tipo_carroceria'
+      Size = 100
+    end
+    object temp_extratipo_doc_faturado: TStringField
+      FieldName = 'tipo_doc_faturado'
+      Size = 100
+    end
+    object temp_extratipo_doc_importadora: TStringField
+      FieldName = 'tipo_doc_importadora'
+      Size = 100
+    end
+    object temp_extratipo_doc_prop: TStringField
+      FieldName = 'tipo_doc_prop'
+      Size = 100
+    end
+    object temp_extratipo_montagem: TStringField
+      FieldName = 'tipo_montagem'
+      Size = 100
+    end
+    object temp_extratipo_veiculo: TStringField
+      FieldName = 'tipo_veiculo'
+      Size = 100
+    end
+    object temp_extrauf: TStringField
+      FieldName = 'uf'
+      Size = 100
+    end
+    object temp_extrauf_faturado: TStringField
+      FieldName = 'uf_faturado'
+      Size = 100
+    end
+    object temp_extrauf_placa: TStringField
+      FieldName = 'uf_placa'
+      Size = 100
+    end
+    object temp_extraunidade_local_srf: TStringField
+      FieldName = 'unidade_local_srf'
+      Size = 100
+    end
+  end
+  object temp_dados: TFDMemTable
+    FieldDefs = <>
+    IndexDefs = <>
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvPersistent, rvSilentMode]
+    ResourceOptions.Persistent = True
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    StoreDefs = True
+    Left = 48
+    Top = 320
+    object temp_dadoscodigo_fipe: TStringField
+      FieldName = 'codigo_fipe'
+      Size = 100
+    end
+    object temp_dadoscodigo_marca: TStringField
+      FieldName = 'codigo_marca'
+      Size = 100
+    end
+    object temp_dadoscodigo_modelo: TStringField
+      FieldName = 'codigo_modelo'
+      Size = 100
+    end
+    object temp_dadosscore: TStringField
+      FieldName = 'score'
+      Size = 100
+    end
+    object temp_dadostexto_modelo: TStringField
+      FieldName = 'texto_modelo'
+      Size = 100
+    end
+  end
+  object temp_principal: TFDMemTable
+    FieldDefs = <>
+    IndexDefs = <>
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvPersistent, rvSilentMode]
+    ResourceOptions.Persistent = True
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    StoreDefs = True
+    Left = 48
+    Top = 208
+    object temp_principalMARCA: TStringField
+      FieldName = 'MARCA'
+    end
+    object temp_principalMODELO: TStringField
+      FieldName = 'MODELO'
+      Size = 100
+    end
+    object temp_principalSUBMODELO: TStringField
+      FieldName = 'SUBMODELO'
+    end
+    object temp_principalcor: TStringField
+      FieldName = 'cor'
+      Size = 100
+    end
+    object temp_principaldata: TStringField
+      FieldName = 'data'
+      Size = 100
+    end
+    object temp_principallogo: TStringField
+      FieldName = 'logo'
+      Size = 255
+    end
+    object temp_principalplaca: TStringField
+      FieldName = 'placa'
+      Size = 100
+    end
+    object temp_principalplaca_alternativa: TStringField
+      FieldName = 'placa_alternativa'
+      Size = 100
+    end
+    object temp_principaltoken: TStringField
+      FieldName = 'token'
+      Size = 100
+    end
+    object temp_principaluf: TStringField
+      FieldName = 'uf'
+      Size = 100
+    end
+  end
+  object tem_resp_whatsapp: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 48
+    Top = 96
+    object tem_resp_whatsappplaca: TStringField
+      FieldName = 'placa'
+    end
+    object tem_resp_whatsappmarca: TStringField
+      FieldName = 'marca'
+    end
+    object tem_resp_whatsappmodelo: TStringField
+      FieldName = 'modelo'
+    end
+    object tem_resp_whatsappcor: TStringField
+      FieldName = 'cor'
+    end
+    object tem_resp_whatsapptipo_veiculo: TStringField
+      FieldName = 'tipo_veiculo'
+    end
+    object tem_resp_whatsappespecie: TStringField
+      FieldName = 'especie'
+    end
+    object tem_resp_whatsappchassi: TStringField
+      FieldName = 'chassi'
+    end
+    object tem_resp_whatsappcap_maxima_tracao: TStringField
+      FieldName = 'cap_maxima_tracao'
+    end
+    object tem_resp_whatsappcaixa_de_cambio: TStringField
+      FieldName = 'caixa_de_cambio'
+    end
+    object tem_resp_whatsapplinha: TStringField
+      FieldName = 'linha'
+    end
+    object tem_resp_whatsappmotor: TStringField
+      FieldName = 'motor'
+    end
+    object tem_resp_whatsappcilindradas: TStringField
+      FieldName = 'cilindradas'
+    end
+    object tem_resp_whatsappeixos: TStringField
+      FieldName = 'eixos'
+    end
+    object tem_resp_whatsappcombustivel: TStringField
+      FieldName = 'combustivel'
+    end
+    object tem_resp_whatsappnacionalidade: TStringField
+      FieldName = 'nacionalidade'
+    end
+    object tem_resp_whatsappano_modelo: TStringField
+      FieldName = 'ano_modelo'
+    end
+    object tem_resp_whatsappano_fabricacao: TStringField
+      FieldName = 'ano_fabricacao'
+    end
+    object tem_resp_whatsappdata_hora_consulta: TStringField
+      FieldName = 'data_hora_consulta'
+    end
+    object tem_resp_whatsappgrv_pesquisa: TStringField
+      FieldName = 'grv_pesquisa'
+    end
+  end
+  object temp_resp_apontahora: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 168
+    Top = 96
+    object temp_resp_apontahoramunicipio: TStringField
+      FieldName = 'municipio'
+    end
+    object temp_resp_apontahorauf: TStringField
+      FieldName = 'uf'
+    end
+    object temp_resp_apontahoraano_fabricacao: TStringField
+      FieldName = 'ano_fabricacao'
+    end
+    object temp_resp_apontahoracmt: TStringField
+      FieldName = 'cmt'
+    end
+    object temp_resp_apontahoracor: TStringField
+      FieldName = 'cor'
+    end
+    object temp_resp_apontahorapbt: TStringField
+      FieldName = 'pbt'
+    end
+    object temp_resp_apontahoraplaca: TStringField
+      FieldName = 'placa'
+    end
+    object temp_resp_apontahoranumero_chassi: TStringField
+      FieldName = 'numero_chassi'
+    end
+    object temp_resp_apontahoranumero_motor: TStringField
+      FieldName = 'numero_motor'
+    end
+    object temp_resp_apontahorapotencia_cavalos: TStringField
+      FieldName = 'potencia_cavalos'
+    end
+    object temp_resp_apontahoracarroceria: TStringField
+      FieldName = 'carroceria'
+    end
+    object temp_resp_apontahoracilindradas_cm3: TStringField
+      FieldName = 'cilindradas_cm3'
+    end
+    object temp_resp_apontahoracombustivel: TStringField
+      FieldName = 'combustivel'
+    end
+    object temp_resp_apontahoraprocedencia: TStringField
+      FieldName = 'procedencia'
+    end
+    object temp_resp_apontahoracaixa_cambio: TStringField
+      FieldName = 'caixa_cambio'
+    end
+    object temp_resp_apontahoratipo_montagem: TStringField
+      FieldName = 'tipo_montagem'
+    end
+    object temp_resp_apontahoratipo_carroceria: TStringField
+      FieldName = 'tipo_carroceria'
+    end
+    object temp_resp_apontahoratipo_veiculo: TStringField
+      FieldName = 'tipo_veiculo'
+    end
+    object temp_resp_apontahoraeixo_traseiro_diferencial: TStringField
+      FieldName = 'eixo_traseiro_diferencial'
+    end
+    object temp_resp_apontahorasituacao_chassi: TStringField
+      FieldName = 'situacao_chassi'
+    end
+    object temp_resp_apontahoracapacidade_carga: TStringField
+      FieldName = 'capacidade_carga'
+    end
+    object temp_resp_apontahoraquantidade_eixos: TStringField
+      FieldName = 'quantidade_eixos'
+    end
+    object temp_resp_apontahoraquantidade_passageiros: TStringField
+      FieldName = 'quantidade_passageiros'
+    end
+    object temp_resp_apontahoramarca_modelo: TStringField
+      FieldName = 'marca_modelo'
+    end
+    object temp_resp_apontahoragrv_pesquisa: TStringField
+      FieldName = 'grv_pesquisa'
+      Visible = False
+    end
+  end
+end

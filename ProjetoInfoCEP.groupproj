@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{306DA9C1-B1B4-44F9-9733-ADE6A3D631D9}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="App\InfoCEP.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Servidor\ServiceInfoCEP.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="InfoCEP">
+        <MSBuild Projects="App\InfoCEP.dproj"/>
+    </Target>
+    <Target Name="InfoCEP:Clean">
+        <MSBuild Projects="App\InfoCEP.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="InfoCEP:Make">
+        <MSBuild Projects="App\InfoCEP.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="ServiceInfoCEP">
+        <MSBuild Projects="Servidor\ServiceInfoCEP.dproj"/>
+    </Target>
+    <Target Name="ServiceInfoCEP:Clean">
+        <MSBuild Projects="Servidor\ServiceInfoCEP.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ServiceInfoCEP:Make">
+        <MSBuild Projects="Servidor\ServiceInfoCEP.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="InfoCEP;ServiceInfoCEP"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="InfoCEP:Clean;ServiceInfoCEP:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="InfoCEP:Make;ServiceInfoCEP:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
