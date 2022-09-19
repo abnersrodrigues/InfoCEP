@@ -4,12 +4,12 @@
 
   Está API tem como objetivo consultar em API Externa devolver ao cliente a consulta, e também guardar pesquisas efetuadas para disponibilizar em novas pesquisas futuras.  
   
-  <img src="/img/app.png" alt="My App"/>
+  <img src="/img/ServicoAPI.png" alt="My App"/>
   
   
   App cliente para consulta
   
-  <img src="/img/ServicoAPI.png" alt="My App"/>
+  <img src="/img/app.png" alt="My App"/>
 
 
 ## 🚀 Começando
