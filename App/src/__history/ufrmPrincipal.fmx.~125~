@@ -1,7 +1,7 @@
 object frmPrincipal: TfrmPrincipal
   Left = 0
   Top = 0
-  Caption = 'InfoCEP'
+  Caption = 'Info Placas'
   ClientHeight = 675
   ClientWidth = 390
   Fill.Kind = Solid
