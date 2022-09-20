@@ -1,11 +1,10 @@
 # InfoCEP
 
-  API em Horse para consulta de CEP.
+  Projeto tem duas aplicações, sendo uma API Service e um Cliente.
 
-  Está API tem como objetivo consultar em API Externa devolver ao cliente a consulta, e também guardar pesquisas efetuadas para disponibilizar em novas pesquisas futuras.  
+  API em Horse para consulta de CEP. Tem como objetivo fazer consultar externa, devolver ao cliente que requisitou, bem como, também guardar a pesquisas efetuadas para disponibilizar em um novo request futuro.  
   
   <img src="/img/ServicoAPI.png" alt="My App"/>
-  
   
   App cliente para consulta
   
