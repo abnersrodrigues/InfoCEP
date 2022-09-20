@@ -16,25 +16,25 @@ uses
 {$R *.RES}
 
 begin
-  //Modo Debugging
-  if DebugHook <> 0 then
-  begin
-    Forms.Application.Initialize;
-    Forms.Application.CreateForm(TfrmPrincipal, frmPrincipal);
-    Application.CreateForm(TfrmPrincipal, frmPrincipal);
-    Application.Run;
-  end
-  else
-  begin
-    if not SvcMgr.Application.DelayInitialize or SvcMgr.Application.Installing then
-      SvcMgr.Application.Initialize;
-    SvcMgr.Application.CreateForm(TInfoCepAPI, InfoCepAPI);
-    SvcMgr.Application.Run;
-  end;
+//  //Modo Debugging
+//  if DebugHook <> 0 then
+//  begin
+//    Forms.Application.Initialize;
+//    Forms.Application.CreateForm(TfrmPrincipal, frmPrincipal);
+//    Application.CreateForm(TfrmPrincipal, frmPrincipal);
+//    Application.Run;
+//  end
+//  else
+//  begin
+//    if not SvcMgr.Application.DelayInitialize or SvcMgr.Application.Installing then
+//      SvcMgr.Application.Initialize;
+//    SvcMgr.Application.CreateForm(TInfoCepAPI, InfoCepAPI);
+//    SvcMgr.Application.Run;
+//  end;
 
 
-//  if not SvcMgr.Application.DelayInitialize or SvcMgr.Application.Installing then
-//    SvcMgr.Application.Initialize;
-//  SvcMgr.Application.CreateForm(TInfoCepAPI, InfoCepAPI);
-//  SvcMgr.Application.Run;
+  if not SvcMgr.Application.DelayInitialize or SvcMgr.Application.Installing then
+    SvcMgr.Application.Initialize;
+  SvcMgr.Application.CreateForm(TInfoCepAPI, InfoCepAPI);
+  SvcMgr.Application.Run;
 end.
